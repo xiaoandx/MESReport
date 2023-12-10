@@ -1,0 +1,385 @@
+﻿@{
+    ViewData["Title"] = "文章列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">标题:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="article_title" name="article_title" maxlength="200" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">分类:</label>
+                    <div class="layui-input-inline">
+                        <select id="type_id" name="type_id">
+                            <option value="">选择分类</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">状态:</label>
+                    <div class="layui-input-inline">
+                        <select id="status_id" name="status_id">
+                            <option value="">选择状态</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">查询</button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">发布日期:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择发布日期" autocomplete="off">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">作者:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="article_author" name="article_author" maxlength="50" placeholder="请输入作者" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">内容:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="article_content" name="article_content" maxlength="50" placeholder="请输入内容" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list layui-btn-danger" data-type="batchdel"><i class="layui-icon">&#xe640;</i>删除</button>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="add"><i class="layui-icon">&#xe654;</i>发布文章</button>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出文章</button>
+                </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="linkTpl">
+                <a lay-href="/articles/views/?id={{d.article_id}}" class="layui-table-link">{{ d.show_article_title }}</a>
+            </script>
+            <script type="text/html" id="imgTpl">
+                <a href="{{ d.show_cover_img }}" class="layui-table-link" target="_blank"><img src="{{ d.show_cover_img }}" width="30" height="30" /></a>
+            </script>
+            <script type="text/html" id="topTpl">
+                <input type="checkbox" name="is_top" lay-skin="switch" lay-text="是|否" lay-filter="check_is_top" value="{{ d.article_id }}" data-json="{{ encodeURIComponent(JSON.stringify(d)) }}" {{ d.is_top ? "checked" : "" }}>
+            </script>
+            <script type="text/html" id="showTpl">
+                <input type="checkbox" name="is_show" lay-skin="switch" lay-text="是|否" lay-filter="check_is_show" value="{{ d.article_id }}" data-json="{{ encodeURIComponent(JSON.stringify(d)) }}" {{ d.is_show ? "checked" : "" }}>
+            </script>
+            <script type="text/html" id="statusTpl">
+                {{#  if(d.status_id == 1){ }}
+                    <span class="layui-badge layui-bg-green">{{ d.status_name }}</span>
+                {{#  } else if(d.status_id == 2) { }}
+                    <span class="layui-badge layui-bg-orange">{{ d.status_name }}</span>
+                {{#  } else { }}
+                    <span class="layui-badge layui-bg-red">{{ d.status_name }}</span>
+                {{#  } }}
+            </script>
+            <script type="text/html" id="typeTpl">
+                {{#  if(d.type_id == 1 && d.type_subid > 0){ }}
+                    {{ d.type_name }} / {{ d.type_subname }}
+                {{#  } else { }}
+                    {{ d.type_name }}
+                {{#  } }}
+            </script>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+        lay('.time').each(function () {
+            laydate.render({
+               elem: this,
+               range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 分类
+            admin.req({
+                url: '/articletypes/select?parent_id=-1'
+                , done: function (res_typeid) {
+                    layer.close(loading);
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_id").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+            // 状态
+            admin.req({
+                url: '/articlestatus/select'
+                , done: function (res_statusid) {
+                    layer.close(loading);
+                    $.each(res_statusid.data, function (i, item) {
+                        $("#status_id").append("<option value=\"" + res_statusid.data[i].status_id + "\">" + res_statusid.data[i].status_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/articles/list",
+            toolbar: false,
+            cols: [
+                [{
+                    type: "checkbox",
+                    fixed: "left"
+                },
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "article_title",
+                    title: "标题",
+                    templet: "#linkTpl",
+                    minWidth: 300
+                },
+                {
+                    field: "type_name",
+                    title: "分类",
+                    templet: "#typeTpl"
+                },
+                {
+                    field: "status_name",
+                    title: "状态",
+                    templet: "#statusTpl"
+                },
+                {
+                    field: "is_top",
+                    title: "是否置顶",
+                    templet: "#topTpl"
+                },
+                {
+                    field: "is_show",
+                    title: "是否显示",
+                    templet: "#showTpl"
+                },
+                {
+                    field: "format_time",
+                    title: "发布日期",
+                    width: 180,
+                    sort: !0
+                },
+                {
+                    title: "操作",
+                    width: 200,
+                    align: "center",
+                    fixed: "right",
+                    toolbar: "#table-content-list"
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where:{
+                review_status_id: 2
+            }
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var article_id = t.data.article_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此文章？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/articles/delete/' + article_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+                });
+            }
+            else if ("edit" === t.event) {
+                parent.layui.index.openTabsPage('/articles/edit/?id=' + article_id, '编辑文章-' + article_id);
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                  curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        // 监听是否置顶操作
+        form.on('switch(check_is_top)', function (obj) {
+            var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/articles/setistop?id=' + this.value + '&is_top=' + obj.elem.checked
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                }
+            });
+            json = table.clearCacheKey(json);
+        });
+
+        // 监听是否显示操作
+        form.on('switch(check_is_show)', function (obj) {
+            var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/articles/setisshow?id=' + this.value + '&is_show=' + obj.elem.checked
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                }
+            });
+            json = table.clearCacheKey(json);
+        });
+
+        var $ = layui.$, active = {
+            batchdel: function () {
+                var checkStatus = table.checkStatus('LAY-app-content-list')
+                    , checkData = checkStatus.data;
+
+                if (checkData.length === 0) {
+                    return layer.msg('请选择数据');
+                }
+
+                // 批量删除
+                layer.confirm('确定删除吗？', function (index) {
+                    checkData.forEach(function (n, i) {
+                        admin.req({
+                            headers: {
+                                'RequestVerificationToken': csrfToken
+                            },
+                            method: 'POST',
+                            url: '/articles/delete/' + n.article_id
+                            , done: function (res) {
+                            }
+                        });
+                    });
+                    layer.msg('删除成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        window.location.reload();
+                    });
+                });
+            },
+            add: function () {
+                parent.layui.index.openTabsPage('/articles/create', '发布文章');
+            },
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "article_title": $("#article_title").val(), "article_content": $("#article_content").val(), "article_author": $("#article_author").val(), "type_id": $("#type_id").val(), "status_id": $("#status_id").val(), "review_status_id": 2, "select_date": $("#created_at").val() },
+                    url: '/excel/exportarticles'
+                    , done: function (res) {
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px;">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $('.collapse_item').hide();
+                $('#collapse').html('展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i>');
+            }
+            else {
+                $('.collapse_item').show();
+                $('#collapse').html('收起<i style="right: -20px;" class="layui-icon layui-icon-up"></i>');
+            }
+            num++;
+        });
+    });
+</script>

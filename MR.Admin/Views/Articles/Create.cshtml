@@ -1,0 +1,431 @@
+﻿@{
+    ViewData["Title"] = "发布文章";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-xs8">
+            <!-- 填充内容 -->
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span style="color:red">*</span> 标题</label>
+                        <div class="layui-input-block">
+                            <input type="text" maxlength="200" id="article_title" name="article_title" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">摘要</label>
+                        <div class="layui-input-block" style="background-color: #fff; ">
+                            <textarea id="article_summary" name="article_summary" maxlength="1000" placeholder="请输入摘要" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span style="color:red">*</span>内容</label>
+                        <div class="layui-input-block" style="background-color: #fff;">
+                            <textarea id="edit_content" style="display: none; " placeholder="请输入内容"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">上传附件</label>
+                        <div class="layui-input-inline">
+                            <button type="button" class="layui-btn layui-btn-primary" id="cloudin-upload-file"><i class="layui-icon"></i>选择文件</button>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-block">
+                            <span id="attachment_list"></span>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-input-block test-progress-file layui-hide" style="margin-top:20px;">
+                            <div class="layui-progress" lay-showpercent="true" lay-filter="test_upload_progress_file" style="margin: 10px;">
+                                <div class="layui-progress-bar layui-bg-blue" lay-percent="0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs4">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span style="color:red">*</span> 分类</label>
+                        <div class="layui-input-block">
+                            <select id="type_id" name="type_id" lay-verify="required" lay-filter="select_type_id">
+                                <option value="">选择分类</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-block">
+                            <select id="type_subid" name="type_subid" lay-filter="select_type_subid">
+                                <option value="">选择分类</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">封面图</label>
+                        <div class="layui-input-block">
+                            <div class="layui-upload-drag" id="cover-upload-drag">
+                                <i class="layui-icon"></i>
+                                <p>点击上传，或将图片拖拽到此处</p>
+                                <label style="color:#dc2828">*图片尺寸建议:500×500(px)以上</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">作者</label>
+                        <div class="layui-input-block">
+                            <input type="text" maxlength="30" id="article_author" name="article_author" placeholder="请输入作者" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">来源</label>
+                        <div class="layui-input-block">
+                            <input type="text" maxlength="20" id="article_source" name="article_source" placeholder="请输入来源" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline">
+                            <label class="layui-form-label">是否显示</label>
+                            <input type="checkbox" lay-filter="switch_is_show" id="switch_is_show" name="switch_is_show" lay-skin="switch" lay-text="是|否" checked>
+                            <input type="hidden" name="is_show" id="is_show" value="true" />
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline">
+                            <label class="layui-form-label">是否置顶</label>
+                            <input type="checkbox" lay-filter="switch_is_top" id="switch_is_top" name="switch_is_top" lay-skin="switch" lay-text="是|否">
+                            <input type="hidden" name="is_top" id="is_top" value="false" />
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-block">
+                            <select id="status_id" name="status_id" lay-filter="select_status_id">
+                                <option value="">选择状态</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item" style="display: none;" id="show_set_publish_time">
+                        <label class="layui-form-label">定时发布</label>
+                        <div class="layui-input-block">
+                            <input type="text" id="set_publish_time" name="set_publish_time" placeholder="请选择定时发布时间" autocomplete="off" class="layui-input time">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-inline">
+                            <input type="hidden" id="lang_id" name="lang_id" value="1" />
+                            <input type="hidden" id="cover_img" name="cover_img" value="" />
+                            <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确定">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'layedit', 'form', 'table', 'upload', 'element', 'laydate'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , element = layui.element
+            , upload = layui.upload
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate
+            , layedit = layui.layedit;
+
+        // 附件
+        var attachment_list = [];
+
+        lay('.time').each(function () {
+            laydate.render({
+                elem: this
+                , trigger: 'click'
+                , type: 'datetime'
+            });
+        });
+
+        // 初始化编辑器
+        var index = layedit.build('edit_content');
+
+        // 上传参数设置
+        layedit.set({
+            uploadImage: {
+                url: '/upload/uploadimg?catalogue=service&open_breviary=true',
+                accept: 'image',
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                acceptMime: 'image/*',
+                exts: 'jpg|png|gif|bmp|jpeg',
+                size: 1024 * 10 * 2,  // 图片最大支持20M
+                done: function (data) {
+                    // console.log(`data=${JSON.stringify(data)}`);
+                }
+            },
+            uploadVideo: {
+                url: '/upload/uploadfile',
+                accept: 'video',
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                acceptMime: 'video/*',
+                exts: 'mp4|flv|avi|rm|rmvb',
+                size: 1024 * 10 * 10, // 视频最大支持100M
+                done: function (data) {
+                    // console.log(`data=${JSON.stringify(data)}`);
+                }
+            }
+            , uploadFiles: {
+                url: '/upload/uploadfile',
+                accept: 'file',
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                acceptMime: 'file/*',
+                size: 1024 * 10 * 10, // 视频最大支持100M
+                autoInsert: true,
+                done: function (data) {
+                    // console.log(`data=${JSON.stringify(data)}`);
+                }
+            }
+            , rightBtn: {
+                type: "layBtn",
+                customEvent: function (targetName, event) {
+                }
+            }
+            , backDelImg: true
+            , devmode: true
+            , autoSync: true
+            , onchange: function (content) {
+                // console.log(`content=${JSON.stringify(content)}`);
+            }
+            , codeConfig: {
+                hide: false,
+                default: 'javascript',
+                encode: true
+                , class: 'layui-code'
+            }
+            , quote: {
+                style: ['Content/css.css'],
+            }
+            , customlink: {
+                title: '自定义链接'
+                , href: location.pathname
+                , onmouseup: ''
+            }
+            //, facePath: ''
+            , devmode: true
+            , videoAttr: 'preload="none" '
+            , height: '500px'
+        });
+
+        // 上传图片至服务端
+        upload.render({
+            elem: '#cover-upload-drag'
+            ,headers: {
+                'RequestVerificationToken': csrfToken
+            }
+            , url: '/upload/uploadimg?catalogue=service&open_breviary=true'
+            , done: function (res) {
+                // console.log(`res=${JSON.stringify(res)}`);
+                if (res.code > 0) {
+                    return layer.msg('上传失败');
+                }
+                $("#cover-upload-drag").html("<img style='max-width:200px;max-height:150px' src='@MR.Manage.Filters.AppSettingsFilter.GetSetting("Aliyun:OSS_URL")" + res.path + "'>");
+                $("#cover_img").val(res.path);
+            }
+        });
+
+        // 上传附件至服务端
+        upload.render({
+            headers: {
+                'RequestVerificationToken': csrfToken
+            },
+            elem: '#cloudin-upload-file'
+            , multiple: true
+            , drag: true
+            , url: '/upload/uploadfile'
+            , accept: 'file'
+            , exts: 'zip|rar|7z|txt|doc|docx|ppt|pptx|xls|xlsx|csv|pdf|avi|mp4|wma|rmvb|rm|flash|3gp|flv|mp3|wav|mid'
+            , before: function (obj) {
+                $(".test-progress-file").removeClass("layui-hide").show();
+            }
+            , progress: function (value) {
+                element.progress('test_upload_progress_file', value + '%');
+            }
+            , done: function (res_upload) {
+                // console.log(`upload file res=${JSON.stringify(res_upload)}`)
+                $(".test-progress-file").addClass("layui-hide").hide();
+                attachment_list += res_upload.old_name + "|" + res_upload.path + ",";
+                $("#attachment_list").append("<div style='padding: 5px; border-bottom: solid 1px #ccc;'><a href='@MR.Manage.Filters.AppSettingsFilter.GetSetting("Aliyun:OSS_URL")" + res_upload.path + "' target=\"_blank\"><span style=\" color: #009688\">" + res_upload.old_name + "</span></a></div>");
+            }
+            , error: function () {
+                $(".test-progress-file").addClass("layui-hide").hide();
+            }
+        });
+
+        // 监听指定开关
+        form.on('switch(switch_is_show)', function (data) {
+            // console.log(`is_show checked=${this.checked}`)
+            if (this.checked) {
+                $("#is_show").val(true);
+            } else {
+                $("#is_show").val(false);
+            }
+        });
+
+        // 监听指定开关
+        form.on('switch(switch_is_top)', function (data) {
+            // console.log(`is_top checked=${this.checked}`)
+            if (this.checked) {
+                $("#is_top").val(true);
+            } else {
+                $("#is_top").val(false);
+            }
+        });
+
+        // 监听选择分类
+        form.on('select(select_type_id)', function (data) {
+            $("#type_subid").html('<option value="">选择分类</option>');
+            admin.req({
+                url: '/articletypes/select?parent_id=' + data.value
+                , done: function (res_typeid) {
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_subid").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 监听选择状态
+        form.on('select(select_status_id)', function (data) {
+            if(data.value == 3){
+                $("#show_set_publish_time").show();
+            } else {
+                $("#show_set_publish_time").hide();
+            }
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 分类
+            admin.req({
+                url: '/articletypes/select?parent_id=-1'
+                , done: function (res_typeid) {
+                    layer.close(loading);
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_id").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+            // 状态
+            admin.req({
+                url: '/articlestatus/select'
+                , done: function (res_statusid) {
+                    layer.close(loading);
+                    $.each(res_statusid.data, function (i, item) {
+                        if(res_statusid.data[i].status_id == 1){
+                            $("#status_id").append("<option value=\"" + res_statusid.data[i].status_id + "\" selected>" + res_statusid.data[i].status_name + "</option>");
+                        } else {
+                            $("#status_id").append("<option value=\"" + res_statusid.data[i].status_id + "\">" + res_statusid.data[i].status_name + "</option>");
+                        }
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            // console.log(`data=${JSON.stringify(data.field)},attachment=${attachment_list}`)
+            data.field.article_content = layedit.getContent(index);
+            data.field.article_remark = attachment_list;
+            // console.log(`data=${data.field.article_content}`)
+            if (!data.field.article_title) {
+                layer.msg('请填写标题');
+                return false;
+            }
+            if (!data.field.article_content) {
+                layer.msg('请填写内容');
+                return false;
+            }
+            if (data.field.status_id == 3 && !data.field.set_publish_time) {
+                layer.msg('请选发布时间');
+                return false;
+            }
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/articles/create'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    if(res.errcode){
+                        layer.open({
+                            title: '错误提示'
+                            ,type: 1
+                            ,content: '<div style="color: red; padding: 20px;">'+ res.errcode +':'+ res.errmsg +'</div>'
+                            ,btn: ["确定"]
+                        });
+                    } else if(res.code == 0 && res.count == 0) {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        });
+                    } else {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        }, function () {
+                            window.location.reload();
+                        });
+                    }
+                }
+            });
+        });
+    })
+</script>

@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "设置网站基本信息";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站名称</label>
+        <div class="layui-input-block">
+            <input type="text" id="website_name" name="website_name" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站域名</label>
+        <div class="layui-input-block">
+            <input type="text" id="website_url" name="website_url" lay-verify="url" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">缓存时间</label>
+        <div class="layui-input-inline" style="width: 80px;">
+            <input type="text" id="cache_time" name="cache_time" lay-verify="number" value="0" class="layui-input">
+        </div>
+        <div class="layui-input-inline layui-input-company">分钟</div>
+        <div class="layui-form-mid layui-word-aux">本地开发一般推荐设置为 0，线上环境建议设置为 10。</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">最大文件上传</label>
+        <div class="layui-input-inline" style="width: 80px;">
+            <input type="text" id="file_maxsize" name="file_maxsize" lay-verify="number" value="2048" class="layui-input">
+        </div>
+        <div class="layui-input-inline layui-input-company">KB</div>
+        <div class="layui-form-mid layui-word-aux">提示：1 M = 1024 KB</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">上传文件类型</label>
+        <div class="layui-input-block">
+            <input type="text" id="file_type" name="file_type" value="png|gif|jpg|jpeg|zip|rar" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">首页标题</label>
+        <div class="layui-input-block">
+            <textarea id="home_title" name="home_title" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">META关键词</label>
+        <div class="layui-input-block">
+            <textarea id="meta_keyword" name="meta_keyword" class="layui-textarea" placeholder="多个关键词用英文状态 , 号分割"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">META描述</label>
+        <div class="layui-input-block">
+            <textarea id="meta_description" name="meta_description" class="layui-textarea">layuiAdmin 是 layui 官方出品的通用型后台模板解决方案，提供了单页版和 iframe 版两种开发模式。layuiAdmin 是目前非常流行的后台模板框架，广泛用于各类管理平台。</textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">版权信息</label>
+        <div class="layui-input-block">
+            <textarea id="copyright_info" name="copyright_info" class="layui-textarea">© 2018 layui.com MIT license</textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">ICP备案</label>
+        <div class="layui-input-block">
+            <input type="text" id="icp_no" name="icp_no" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline">
+            <input type="hidden" name="base_id" id="base_id" value="1" />
+            <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确定保存">
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin;
+
+        // 默认加载
+        $(function () {
+            var base_id = $("#base_id").val();
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/settingbase/details'
+                , data: { id: base_id }
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#website_name").val(res.data.website_name);
+                    $("#website_url").val(res.data.website_url);
+                    $("#cache_time").val(res.data.cache_time);
+                    $("#file_maxsize").val(res.data.file_maxsize);
+                    $("#file_type").val(res.data.file_type);
+                    $("#home_title").val(res.data.home_title);
+                    $("#meta_keyword").val(res.data.meta_keyword);
+                    $("#meta_description").val(res.data.meta_description);
+                    $("#copyright_info").val(res.data.copyright_info);
+                    $("#icp_no").val(res.data.icp_no);
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/settingbase/edit/' + data.field.base_id
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        window.location.reload();
+                    });
+                }
+            });
+        });
+    })
+</script>

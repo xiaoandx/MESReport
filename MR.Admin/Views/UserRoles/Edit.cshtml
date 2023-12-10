@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "编辑角色";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-block">
+            <input type="text" id="role_name" name="role_name" maxlength="50" lay-verify="required" placeholder="请输入角色名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">拥有权限</label>
+        <div class="layui-input-block">
+            <input type="text" id="role_desc" name="role_desc" maxlength="500" lay-verify="required" placeholder="请输入拥有权限" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">描述</label>
+        <div class="layui-input-block">
+            <textarea id="role_remark" name="role_remark" maxlength="500" lay-verify="required" placeholder="请输入描述" autocomplete="off" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="role_authority" name="role_authority" value="1#11200,1#11300,6#16100,6#16200,9#19800" />
+        <input type="hidden" id="role_id" name="role_id" value="@ViewContext.HttpContext.Request.Query["id"]" />
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            var role_id = $("#role_id").val();
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/userroles/details'
+                , data: { id: role_id }
+                , done: function (res) {
+                    layer.close(loading);
+                    $("#role_name").val(res.data.role_name);
+                    $("#role_authority").val(res.data.role_authority);
+                    $("#role_desc").val(res.data.role_desc);
+                    $("#role_remark").val(res.data.role_remark);
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            var field = data.field;
+            var index = parent.layer.getFrameIndex(window.name);
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/userroles/edit?id=' + data.field.role_id
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    parent.layui.table.reload('LAY-app-content-list'); //重载表格
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        parent.layer.close(index); //再执行关闭
+                    });
+                }
+            });
+        });
+    })
+</script>

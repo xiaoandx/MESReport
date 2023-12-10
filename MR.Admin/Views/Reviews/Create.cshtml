@@ -1,0 +1,75 @@
+﻿@{
+    ViewData["Title"] = "新增审核意见";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">审核状态</label>
+        <div class="layui-input-block">
+            <input type="radio" name="status_id" value="2" title="通过" checked>
+            <input type="radio" name="status_id" value="3" title="驳回">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">审核意见</label>
+        <div class="layui-input-block">
+            <textarea id="review_content" name="review_content" class="layui-textarea" placeholder="请输入审核意见"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="created_at" name="created_at" value="@DateTime.Now.ToString()" />
+        <input type="hidden" id="object_id" name="object_id" value="@ViewContext.HttpContext.Request.Query["id"]" />
+        <input type="hidden" id="type_id" name="type_id" value="@ViewContext.HttpContext.Request.Query["review_type"]" />
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , layedit = layui.layedit
+            , laydate = layui.laydate;
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-submit)', function (data) {
+            var field = data.field;
+            var index = parent.layer.getFrameIndex(window.name);
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            //提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/reviews/create'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    parent.layui.table.reload('LAY-app-content-list'); //重载表格
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        parent.layer.close(index); //再执行关闭
+                    });
+                }
+            });
+        });
+    })
+</script>

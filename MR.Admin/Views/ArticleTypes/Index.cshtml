@@ -1,0 +1,183 @@
+﻿@{
+    ViewData["Title"] = "文章分类管理";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="add"><i class="layui-icon layui-icon-add-1"></i>新增一级分类</button>
+                <span style="color: red">&nbsp;&nbsp;提示：此功能仅供核心运营人员或开发人员操作使用，请谨慎操作！</span>
+            </div>
+            <table id="type_tree_data" lay-filter="type_tree_data"></table>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="add"><i class="layui-icon layui-icon-add-1"></i>新增</a>
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+            <script type="text/html" id="statusTpl">
+                <input type="checkbox" name="is_show" lay-skin="switch" lay-text="是|否" lay-filter="switch_is_show"
+                       value="{{ d.type_id }}" data-json="{{ encodeURIComponent(JSON.stringify(d)) }}" {{ d.is_show? 'checked' : '' }}>
+            </script>
+            <input type="hidden" id="icon_path" name="icon_path" value="" />
+            <input type="hidden" id="type_id" name="type_id" value="" />
+            <input type="file" id="btUpload" style="display:none;" />
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'util', 'treeTable', 'upload'], function () {
+        var table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , upload = layui.upload
+            , util = layui.util;
+
+        var treeTable = layui.treeTable;
+        treeTable.render({
+            elem: '#type_tree_data',
+            toolbar: false,
+            tree: {
+                iconIndex: 1
+            },
+            cols: [
+                [
+                    {
+                        field: "type_id",
+                        title: "ID",
+                        sort: !0,
+                        width: 100,
+                    },
+                    {
+                        field: "type_name",
+                        title: "分类名称",
+                        minWidth: 350,
+                    },
+                    {
+                        field: "is_show",
+                        title: "是否启用",
+                        templet: "#statusTpl"
+                    },
+                    {
+                        field: "article_num",
+                        title: "文章数量",
+                    },
+                    {
+                        title: "操作",
+                        width: 280,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            reqData: function (data, callback) {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+                admin.req({
+                    url: '/articletypes/list'
+                    , data: { parent_id: data ? data.type_id : "-1" }
+                    , done: function (res) {
+                        layer.close(loading);
+                        callback(res.data);
+                    }
+                });
+            },
+            style: 'margin-top:0;',
+        });
+
+        // 右侧操作事件
+        treeTable.on("tool(type_tree_data)", function (t) {
+            var type_id = t.data.type_id;
+            var type_level = t.data.type_level;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此分类？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/articletypes/delete/' + type_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("edit" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "编辑分类",
+                    content: "/articletypes/edit?id=" + type_id,
+                    maxmin: !0,
+                    area: ["550px", "350px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+            else if ("add" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "新增分类",
+                    content: "/articletypes/create?parent_id=" + type_id,
+                    maxmin: !0,
+                    area: ["550px", "350px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-submit");
+                        a.trigger("click");
+                    }
+                })
+            }
+        }),
+
+        // 监听是否启用操作
+        form.on('switch(switch_is_show)', function (obj) {
+            var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/articletypes/setshow?id=' + this.value + '&status=' + obj.elem.checked
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                }
+            });
+            json = table.clearCacheKey(json);
+        });
+
+        var $ = layui.$, active = {
+            add: function () {
+                layer.open({
+                    type: 2
+                    , title: '添加分类'
+                    , content: '/articletypes/create?parent_id=-1'
+                    , maxmin: true
+                    , area: ['550px', '350px']
+                    , btn: ['确定', '取消']
+                    , yes: function (index, layero) {
+                        var submit = layero.find('iframe').contents().find("#layuiadmin-app-form-submit");
+                        submit.click();
+                    }
+                });
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

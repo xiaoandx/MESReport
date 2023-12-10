@@ -1,0 +1,148 @@
+﻿@{
+    ViewData["Title"] = "编辑资料";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">编辑资料</div>
+                <div class="layui-card-body" pad15>
+                    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label"><span style="color:red">*</span> 用户名</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="user_name" name="user_name" disabled="disabled" lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label"><span style="color:red">*</span> 昵称</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="nick_name" name="nick_name" lay-verify="required" placeholder="请输入昵称" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label"><span style="color:red">*</span> 手机号</label>
+                            <div class="layui-input-block">
+                                <input type="tel" id="mobile_phone" name="mobile_phone" lay-verify="required|phone" placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">职位</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="user_job" name="user_job" placeholder="请输入职位" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">Email</label>
+                            <div class="layui-input-block">
+                                <input type="email" id="user_email" name="user_email" placeholder="请输入Email" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">签名</label>
+                            <div class="layui-input-block">
+                                <textarea id="user_slogan" name="user_slogan" placeholder="请输入签名" autocomplete="off" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">介绍</label>
+                            <div class="layui-input-block">
+                                <textarea id="user_intro" name="user_intro" placeholder="请输入介绍" autocomplete="off" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label"></label>
+                            <div class="layui-input-block">
+                                <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="保存">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/users/detailsbytoken'
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#user_name").val(res.data.user_name);
+                    $("#nick_name").val(res.data.nick_name);
+                    $("#user_slogan").val(res.data.user_slogan);
+                    $("#user_intro").val(res.data.user_intro);
+                    $("#user_job").val(res.data.user_job);
+                    $("#user_email").val(res.data.user_email);
+                    $("#mobile_phone").val(res.data.mobile_phone);
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            if (!data.field.nick_name) {
+                layer.msg('请输入昵称');
+                return false;
+            }
+
+            if (!data.field.mobile_phone) {
+                layer.msg('请输入手机号');
+                return false;
+            }
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/users/editbytoken'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        window.location.reload();
+                    });
+                }
+            });
+        });
+    })
+</script>

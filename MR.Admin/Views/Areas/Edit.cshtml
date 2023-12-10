@@ -1,0 +1,139 @@
+﻿@{
+    ViewData["Title"] = "编辑区域";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">区域名称</label>
+        <div class="layui-input-block">
+            <input maxlength="50" type="text" id="area_name" name="area_name" lay-verify="required" placeholder="请输入区域名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">简称</label>
+        <div class="layui-input-block">
+            <input maxlength="10" type="text" id="short_name" name="short_name" lay-verify="required" placeholder="请输入简称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">级别</label>
+        <div class="layui-input-block">
+            <input maxlength="1" type="text" id="level_type" name="level_type" lay-verify="required" placeholder="请输入级别" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">城市代码</label>
+        <div class="layui-input-block">
+            <input maxlength="10" type="text" id="city_code" name="city_code" placeholder="请输入城市代码" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">邮政编码</label>
+        <div class="layui-input-block">
+            <input maxlength="10" type="text" id="zip_code" name="zip_code" placeholder="请输入邮政编码" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">全称</label>
+        <div class="layui-input-block">
+            <input maxlength="50" type="text" id="merger_name" name="merger_name" lay-verify="required" placeholder="请输入全称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">经度</label>
+        <div class="layui-input-block">
+            <input maxlength="20" type="text" id="area_lng" name="area_lng" lay-verify="required" placeholder="请输入经度" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">纬度</label>
+        <div class="layui-input-block">
+            <input maxlength="20" type="text" id="area_lat" name="area_lat" lay-verify="required" placeholder="请输入纬度" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">拼音</label>
+        <div class="layui-input-block">
+            <input maxlength="10" type="text" id="area_pinyin" name="area_pinyin" lay-verify="required" placeholder="请输入拼音" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="created_at" name="created_at" value="@DateTime.Now.ToString()" />
+        <input type="hidden" id="area_id" name="area_id" value="@ViewContext.HttpContext.Request.Query["parent_id"]" />
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            var area_id = $("#area_id").val();
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/areas/details'
+                , data: { id: area_id }
+                , done: function (res) {
+                    layer.close(loading);
+                    $("#area_name").val(res.data.area_name);
+                    $("#parent_id").val(res.data.parent_id);
+                    $("#short_name").val(res.data.short_name);
+                    $("#level_type").val(res.data.level_type);
+                    $("#city_code").val(res.data.city_code);
+                    $("#zip_code").val(res.data.zip_code);
+                    $("#merger_name").val(res.data.merger_name);
+                    $("#area_lng").val(res.data.area_lng);
+                    $("#area_lat").val(res.data.area_lat);
+                    $("#area_pinyin").val(res.data.area_pinyin);
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            var field = data.field; //获取提交的字段
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            //提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/areas/edit?id=' + data.field.area_id
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    parent.layui.treeTable.reload('area_tree_data'); //重载表格
+
+                    layer.close(loading);
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        parent.layer.close(index); //再执行关闭
+                    });
+                }
+            });
+        });
+    })
+</script>

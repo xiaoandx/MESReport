@@ -1,0 +1,425 @@
+﻿@{
+    ViewData["Title"] = "柱状图演示";
+
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <!-- 按日统计 -->
+    <div class="layui-col-sm12">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                访问量统计
+            </div>
+            <div class="layui-card-body">
+                <div class="layui-row">
+                    <div class="layui-col-sm12">
+                        <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade"
+                            lay-filter="LAY-index-pagetwo">
+                            <div carousel-item id="chart_visit_day">
+                                <div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 检索数据 -->
+    <div class="layui-col-sm12">
+        <div class="layui-card">
+            <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">客户端IP:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="client_ip" name="client_ip" maxlength="50" placeholder="请输入客户端IP"
+                                autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">会员昵称:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="member_name" name="member_name" maxlength="50" placeholder="请输入会员昵称"
+                                autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">被访问页面:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="visit_path" name="visit_path" maxlength="500" placeholder="请输入被访问页面"
+                                autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                            查询
+                        </button>
+                        <button class="layui-btn layui-btn-primary" lay-submit
+                            lay-filter="LAY-app-contlist-reset">重置</button>
+                        <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i
+                                style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                    </div>
+                </div>
+                <div class="layui-form-item collapse_item" style="display:none;">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">访问客户端:</label>
+                        <div class="layui-input-inline">
+                            <select id="source_id" name="source_id">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">频道:</label>
+                        <div class="layui-input-inline">
+                            <select id="channel_id" name="channel_id">
+                                <option value="">选择频道</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">访问时间:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input time" id="created_at" name="created_at"
+                                placeholder="选择访问时间" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-card-body">
+                <div class="layui-form-item" style="margin-bottom: 5px;">
+                    <div class="layui-inline">
+                        @* <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i
+                        class="layui-icon layui-icon-export"></i>导出访问量</button> *@
+                    </div>
+                </div>
+                <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+                <script type="text/html" id="linkTpl">
+                <a lay-href="/visits/views/?id={{d.visit_id}}" class="layui-table-link">{{ d.visit_id }}</a>
+            </script>
+                <script type="text/html" id="memberTpl">
+                {{ d.member_name ? '<a lay-href="/members/views/?id='+ d.member_id +'" class="layui-table-link">'+ d.member_name +'</a>' : '-' }}
+            </script>
+                <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="views"><i class="layui-icon layui-icon-search"></i>详情</a>
+            </script>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+
+    /*
+    构建模拟数据
+    */
+    // prettier-ignore
+    let dataAxis = ['点', '击', '柱', '子', '或', '者', '两', '指', '在', '触', '屏', '上', '滑', '动', '能', '够', '自', '动', '缩', '放'];
+    // prettier-ignore
+    let data = [220, 182, 191, 234, 290, 330, 310, 123, 442, 321, 90, 149, 210, 122, 133, 334, 198, 123, 125, 220];
+    let yMax = 500;
+    let dataShadow = [];
+    for (let i = 0; i < data.length; i++) {
+        dataShadow.push(yMax);
+    }
+
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+                elem: this,
+                range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 注册来源
+            admin.req({
+                url: '/utmsources/select'
+                , done: function (res_utmsource) {
+                    layer.close(loading);
+                    // console.log(res_utmsource.data);
+                    $.each(res_utmsource.data, function (i, item) {
+                        $("#source_id").append("<option value=\"" + res_utmsource.data[i].source_id + "\">" + res_utmsource.data[i].source_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+            // 频道
+            admin.req({
+                url: '/visitchannels/select'
+                , done: function (res_channelid) {
+                    layer.close(loading);
+                    $.each(res_channelid.data, function (i, item) {
+                        $("#channel_id").append("<option value=\"" + res_channelid.data[i].channel_id + "\">" + res_channelid.data[i].channel_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 柱状图
+        layui.define(function (e) {
+            var a = layui.admin;
+            layui.use(["admin", "carousel"], function () {
+                var e = layui.$,
+                    a = (layui.admin, layui.carousel),
+                    l = layui.element,
+                    t = layui.device();
+                e(".layadmin-carousel").each(function () {
+                    var l = e(this);
+                    a.render({
+                        elem: this,
+                        width: "100%",
+                        arrow: "none",
+                        interval: l.data("interval"),
+                        autoplay: l.data("autoplay") === !0,
+                        trigger: t.ios || t.android ? "click" : "hover",
+                        anim: l.data("anim")
+                    })
+                }), l.render("progress")
+            }), layui.use(["carousel", "echarts"], function () {
+                var e = layui.$,
+                    a = (layui.carousel, layui.echarts),
+                    l = [],
+                    t = [{
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                saveAsImage: { show: true }, // 导出图片//是否显示该工具
+                                dataView: { show: true, }, // 数据视图
+                                restore: { show: true }, // 重置
+                                dataZoom: { show: true }, // 区域缩放
+                                magicType: { show: true, type: ['line', 'bar', 'stack'], title: { line: '切换为折线图', bar: '切换为柱状图', stack: '切换为堆叠' } }
+                            }
+                        },
+                        tooltip: {
+                            trigger: "bar"
+                        },
+                        calculable: !0,
+                        legend: {
+                            data: ["每日访问量走势图"]
+                        },
+                        xAxis: {
+                            data: dataAxis,
+                            axisLabel: {
+                                inside: true,
+                                color: '#fff'
+                            },
+                            axisTick: {
+                                show: false
+                            },
+                            axisLine: {
+                                show: false
+                            },
+                            z: 10
+                        },
+                        yAxis: {
+                            axisLine: {
+                                show: false
+                            },
+                            axisTick: {
+                                show: false
+                            },
+                            axisLabel: {
+                                color: '#999'
+                            }
+                        },
+                        series: [{
+                            type: 'bar',
+                            showBackground: true,
+                            itemStyle: {
+                                color: '#83bff6'
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    color: '#2378f7'
+                                }
+                            },
+                            data: data
+                        }]
+                    }],
+                    i = e("#chart_visit_day").children("div"),
+                    n = function (e) {
+                        l[e] = a.init(i[e], layui.echartsTheme), l[e].setOption(t[e]), window.onresize = l[e].resize
+                    };
+                i[0] && n(0)
+            })
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/visits/list",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [
+                [
+                    {
+                        type: "numbers",
+                        title: "序号",
+                        width: 80,
+                    },
+                    {
+                        field: "client_ip",
+                        title: "客户端IP",
+                        width: 150
+                    },
+                    {
+                        field: "member_name",
+                        title: "会员昵称",
+                        width: 120,
+                        templet: "#memberTpl"
+                    },
+                    {
+                        field: "visit_path",
+                        title: "被访问页面",
+                        minWidth: 200,
+                    },
+                    {
+                        field: "source_name",
+                        title: "访问客户端",
+                        width: 150
+                    },
+                    {
+                        field: "channel_name",
+                        title: "频道",
+                        width: 150
+                    },
+                    {
+                        field: "device_model",
+                        title: "设备型号",
+                        width: 150
+                    },
+                    {
+                        field: "client_version",
+                        title: "版本号",
+                        width: 120
+                    },
+                    {
+                        field: "format_time",
+                        title: "访问时间",
+                        width: 180,
+                        sort: !0,
+                        width: 180,
+                    },
+                    {
+                        title: "操作",
+                        width: 120,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500]
+        }),
+
+            // 右侧操作事件
+            table.on("tool(LAY-app-content-list)", function (t) {
+                var visit_id = t.data.visit_id;
+                if ("views" === t.event) {
+                    parent.layui.index.openTabsPage('/visits/views/?id=' + visit_id, '访问量详情-' + visit_id);
+                }
+            }),
+
+            // 监听搜索
+            form.on('submit(LAY-app-contlist-search)', function (data) {
+                var field = data.field;
+                //执行重载
+                table.reload('LAY-app-content-list', {
+                    where: field,
+                    page: {
+                        curr: 1
+                    },
+                });
+            });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "visit_path": $("#visit_path").val(), "member_name": $("#member_name").val(), "client_ip": $("#client_ip").val(), "source_id": $("#source_id").val(), "channel_id": $("#channel_id").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportvisit'
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if (res.errcode) {
+                            layer.open({
+                                title: '错误提示'
+                                , type: 1
+                                , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                , btn: ["确定"]
+                            });
+                        } else if (res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+
+    });
+</script>

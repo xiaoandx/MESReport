@@ -1,0 +1,216 @@
+﻿@{
+    ViewData["Title"] = "文章详情";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    .layui-form-item .layui-input-block {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    }
+    .layui-layedit {
+        width: 100%;
+        background-color: #fff;
+    }
+    .layui-input, .layui-select, .layui-textarea {
+        border-width: 0px;
+    }
+</style>
+
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-header">文章信息</div>
+                <div class="layui-card-body">
+                    <div style="padding: 20px 30px 0 0;">
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">文章ID：</label>
+                                <div class="layui-input-inline">
+                                    <span class="layui-badge layui-bg-blue" id="article_id" style="margin-top: 10px;">0</span>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">分类：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="type_name" name="type_name" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">访问量：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="visit_num" name="visit_num" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">状态：</label>
+                                <div class="layui-input-inline" style="padding-top: 6px;">
+                                    <span id="status_name"></span>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">是否显示：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="is_show" name="is_show" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">是否置顶：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="is_top" name="is_top" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">作者：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="article_author" name="article_author" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">来源：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="article_source" name="article_source" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">发布人：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled type="text" id="user_name" name="user_name" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">标题：</label>
+                                <div class="layui-input-block">
+                                    <div id="article_title"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">摘要：</label>
+                                <div class="layui-input-block">
+                                    <div id="article_summary"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 120px">附件：</label>
+                            <div class="layui-input-block">
+                                <span id="attachment_list"></span>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">封面图：</label>
+                                <div class="layui-input-block">
+                                    <span id="cover_img"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space10" id="show2">
+        <div class="layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-header">文章内容</div>
+                <div class="layui-card-body" style="text-align: center; margin: auto 0; padding: 50px 100px;">
+                    <div id="article_content" style="text-align: left;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/articles/details'
+                , data: { id:@ViewContext.HttpContext.Request.Query["id"] }
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#article_id").html(res.data.article_id);
+                    $("#article_title").html(res.data.article_title);
+                    $("#article_content").html(res.data.article_content);
+                    $("#article_author").val(res.data.article_author);
+                    $("#article_source").val(res.data.article_source);
+                    $("#article_summary").html(res.data.article_summary);
+                    $("#type_name").val(res.data.type_name + " / " + res.data.type_subname);
+                    $("#status_name").html(res.data.status_name);
+                    $("#review_status_name").html(res.data.review_status_name);
+                    $("#is_top").val(res.data.is_top ? "是" : "否");
+                    $("#is_show").val(res.data.is_show ? "是" : "否");
+                    $("#user_name").val(res.data.user_name);
+                    $("#visit_num").val(res.data.visit_num);
+                    if(res.data.status_id == 2){
+                        $("#status_name").html('<span class="layui-badge layui-bg-green">'+ res.data.status_name +'</span>');
+                    } else {
+                       $("#status_name").html('<span class="layui-badge layui-bg-orange">'+ res.data.status_name +'</span>');
+                    }
+                    $("#cover_img").html("<a onclick='preview(this);' style='cursor: pointer'><img src='" + res.data.show_cover_img + "' width='200'></a>");
+
+                    // 处理附件
+                    $.each(res.data.attachments, function (i, item) {
+                        var num = i + 1;
+                        $("#attachment_list").append("<div style='padding: 5px; border-bottom: solid 1px #ccc;'>" + num + ". <a href='" + res.data.attachments[i].attachment_path + "' target=\"_blank\"><span style=\" color: #009688\">" + res.data.attachments[i].attachment_name + "</span></a></div>");
+                    });
+
+                    // 图片预览
+                    layer.photos({
+                        photos: '#article_content'
+                    });
+                }
+            });
+
+        });
+    })
+
+    // 预览图片
+    function preview(t) {
+        var t = $(t).find("img");
+        layer.open({
+            type: 1,
+            title: '图片预览',
+            skin: 'layui-layer-rim',
+            area: ['80%', '80%'],
+            shadeClose: true,
+            end: function (index, layero) {
+                return false;
+            },
+            content: '<div style="text-align:center;padding: 20px;"><img src="' + $(t).attr('src') + '" /></div>'
+        });
+    }
+</script>

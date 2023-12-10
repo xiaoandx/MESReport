@@ -1,0 +1,290 @@
+﻿@{
+    ViewData["Title"] = "权限管理";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    #LAY-component-grid-mobile-pc .layui-card-body {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .menu_box {
+        padding: 10px;
+    }
+
+    .menu_box_parent {
+        text-align: left;
+        padding: 10px 0;
+    }
+
+    .menu_box_sub {
+        text-align: left;
+        margin-left: 50px;
+        padding: 5px 0;
+    }
+
+    .menu_box_three {
+        text-align: left;
+        margin-left: 60px;
+    }
+
+    .layui-tab-title li {
+        display: block;
+    }
+
+    .layui-tab-title {
+        float: left;
+    }
+
+    .layui-tab-content {
+        float: left;
+    }
+</style>
+<div class="layui-fluid" id="LAY-component-grid-mobile-pc">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-xs6 layui-col-md2">
+            <div class="layui-card">
+                <div class="layui-card-header">选择角色</div>
+                <div class="layui-card-body" style="justify-content: left; display: block;">
+
+                    <div class="layui-tab layui-tab-brief" lay-filter="menu_roles">
+                        <ul class="layui-tab-title" id="roles_list">
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs6 layui-col-md10">
+            <div class="layui-card">
+                <div class="layui-card-header">设置权限</div>
+                <div class="layui-card-body">
+                    <form class="layui-form" action="" lay-filter="component-form-element">
+                        <div class="menu_box" id="menu_box"></div>
+                        <div class="layui-form-item">
+                            <input type="hidden" id="role_id" name="role_id" value="1" />
+                            <input type="hidden" id="role_authority" name="role_authority" value="1" />
+                            <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="保存">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util', 'form'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , util = layui.util
+            , element = layui.element;
+
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 角色列表
+            admin.req({
+                url: '/userroles/select'
+                , done: function (res) {
+                    layer.close(loading);
+                    $.each(res.data, function (i, item) {
+                        if (i == 0) {
+                            $("#roles_list").append("<li lay-id=\"" + res.data[i].role_id + "\" style=\"padding: 5px 0 \" class=\"layui-this\" ><span class=\"layui-btn layui-btn-sm layui-btn-primary  layui-btn-fluid\">" + res.data[i].role_name + "</span></li>");
+                        }
+                        else {
+                            $("#roles_list").append("<li lay-id=\"" + res.data[i].role_id + "\" style=\"padding: 5px 0 \"><span class=\"layui-btn layui-btn-sm layui-btn-primary  layui-btn-fluid\">" + res.data[i].role_name + "</span></li>");
+                        }
+                    });
+                    $(".layui-card-body").css("minHeight", res.data.length * 50 + 20);
+                }
+            });
+
+            menusParent();
+            rolesHistory(1);
+        });
+
+        // 读取历史权限
+        function rolesHistory(role_id) {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            $("#role_authority").val("");
+
+            admin.req({
+                url: '/userroles/details'
+                , data: { id: role_id }
+                , done: function (res) {
+                    layer.close(loading);
+                    $("#role_authority").val(res.data.role_authority);
+                    menusParent(role_id, res.data.role_authority);
+                }
+            });
+        };
+
+        // 监听左侧点击菜单-重新加载右侧菜单
+        element.on('tab(menu_roles)', function (data) {
+            var id = $(this).attr("lay-id");
+            $('#role_id').val(id);
+            rolesHistory(id);
+        });
+
+        // 加载主菜单
+        function menusParent(id, role_authority) {
+            $("#menu_box").empty();
+            form.render();
+            // 菜单列表
+            admin.req({
+                url: '/menus/itemlist?parent_id=-1'
+                , done: function (res) {
+                    $.each(res.data, function (i, item) {
+                        var menus_code = res.data[i].menu_code;
+                        if (role_authority.indexOf(menus_code) >= 0) {
+                            $("#menu_box").append("<div class=\"menu_box_parent\" id=\"menus_sub" + res.data[i].menu_id + "\"><input type=\"checkbox\" lay-skin=\"primary\" name=\"" + res.data[i].menu_id + "\" id=\"menu_parent_" + res.data[i].menu_id + "\" value=\"" + res.data[i].menu_code + "\" lay-filter=\"menu_parent_all\" title=\"" + res.data[i].menu_name + "\" checked></div>");
+                        }
+                        else {
+                            $("#menu_box").append("<div class=\"menu_box_parent\" id=\"menus_sub" + res.data[i].menu_id + "\"><input type=\"checkbox\" lay-skin=\"primary\" name=\"" + res.data[i].menu_id + "\" id=\"menu_parent_" + res.data[i].menu_id + "\" value=\"" + res.data[i].menu_code + "\" lay-filter=\"menu_parent_all\" title=\"" + res.data[i].menu_name + "\"></div>");
+                        }
+                        $("#menu_box").append("<hr>");
+                        // 加载子菜单及权限选项
+                        menusSecond(res.data[i].menu_id);
+                    });
+                    form.render();
+                }
+            });
+        };
+
+        // 获取二级菜单
+        function menusSecond(id) {
+            var role_authority = $("#role_authority").val();
+            //查找二级菜单
+            admin.req({
+                url: '/menus/itemlist/?parent_id=' + id
+                , done: function (res) {
+                    $.each(res.data, function (i, item) {
+                        var menu_id = res.data[i].menu_id;
+                        var menus_code = res.data[i].menu_code;
+
+                        if (role_authority.indexOf(menus_code) >= 0) {
+                            $("#menus_sub" + id).append("<div class=\"menu_box_sub\" id=\"menus_three" + menu_id + "\"><span class=\"item_sub\"><input type=\"checkbox\" id=\"menu_sub_" + menu_id + "\" name=\"" + menu_id + "\" value=\"" + res.data[i].menu_code + "\" lay-skin=\"primary\" lay-filter=\"menu_sub_all\" class=\"menu_sub_" + id + "\" title=\"" + res.data[i].menu_name + "\" checked></span></div>");
+                        }
+                        else {
+                            $("#menus_sub" + id).append("<div class=\"menu_box_sub\" id=\"menus_three" + menu_id + "\"><span class=\"item_sub\"><input type=\"checkbox\" id=\"menu_sub_" + menu_id + "\" name=\"" + menu_id + "\" value=\"" + res.data[i].menu_code + "\" lay-skin=\"primary\" lay-filter=\"menu_sub_all\" class=\"menu_sub_" + id + "\" title=\"" + res.data[i].menu_name + "\"></span></div>");
+                        }
+                    });
+                    form.render();
+                }
+            });
+        };
+
+        // 全选：一级
+        form.on('checkbox(menu_parent_all)', function (data) {
+            var status = data.elem.checked;
+            var name = data.elem.name;
+
+            if (status == true) {
+                $(".menu_sub_" + name).prop("checked", true);
+                form.render('checkbox');
+            } else {
+                $(".menu_sub_" + name).prop("checked", false);
+                form.render('checkbox');
+            }
+        });
+
+        // 全选：二级
+        form.on('checkbox(menu_sub_all)', function (data) {
+            var status = data.elem.checked;
+            var name = data.elem.name;
+
+            if (status == true) {
+                $(".menu_three_" + name).prop("checked", true);
+                form.render('checkbox');
+            } else {
+                $(".menu_three_" + name).prop("checked", false);
+                form.render('checkbox');
+            }
+        });
+
+        // 单个选择或取消，关联全部选中及取消
+        form.on('checkbox(menu_three_item)', function (data) {
+            var status = data.elem.checked;
+            var name = data.elem.name;
+            var item = $(".menu_three_all");
+            // 如果都勾选了，勾上全选
+            var all = item.length;
+            for (var i = 0; i < item.length; i++) {
+                if (item[i].checked == true) {
+                    all--;
+                }
+            }
+            if (all == 0) {
+                $("#menu_sub_" + name).prop("checked", true);
+                form.render('checkbox');
+            }
+
+            // 如果都取消勾选  取消全选
+            var cancel_all = 5;//--------------如果权限数量5个有变动，这里需要改动
+            for (var i = 0; i < 5; i++) {
+                if (item[i].checked == false) {
+                    cancel_all--;
+                }
+            }
+            if (cancel_all == 0) {
+                $("#menu_sub_" + name).prop("checked", false);
+                form.render('checkbox');
+            }
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 将页面全部复选框选中的值拼接到一个数组中
+            // var checked_value = [];
+            var checked_list = "";
+            $('input[type=checkbox]:checked').each(function () {
+                // checked_value.push($(this).val());
+                checked_list += $(this).val() + ",";
+            });
+            // 数组
+            $('#role_authority').val(checked_list);
+
+            data.field.role_authority = checked_list;
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/userroles/update'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        document.body.scrollTop = document.documentElement.scrollTop = 0;
+                    });
+                }
+            });
+        });
+    });
+</script>

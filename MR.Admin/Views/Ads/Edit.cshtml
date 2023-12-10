@@ -1,0 +1,270 @@
+﻿@{
+    ViewData["Title"] = "编辑广告";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form-item" id="picture-one">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 图片</label>
+                    <div class="layui-input-block">
+                        <div class="layui-upload-drag" id="banner-upload-drag">
+                            <i class="layui-icon"></i>
+                            <p>点击上传，或将图片拖拽到此处</p>
+                            <label style="color:#dc2828">*封面图片尺寸建议: 500×350(px)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 标题</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="text" id="ads_name" name="ads_name" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 排序</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="number" id="sort_num" name="sort_num" lay-verify="required" placeholder="请输入排序" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;">是否显示</label>
+                    <div class="layui-input-inline">
+                        <input type="checkbox" lay-verify="required" lay-filter="switch_is_show" id="switch_is_show" name="switch_is_show"  lay-skin="switch" lay-text="是|否" checked="checked">
+                        <input type="hidden" name="is_show" id="is_show" value="true" />
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 跳转类型</label>
+                    <div class="layui-input-block">
+                        <select id="link_id" name="link_id" lay-verify="required" lay-filter="select_link_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item" id="jump_type1" style="display: none;">
+                    <label class="layui-form-label" style="width: 120px;">外链</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="text" id="page_url" name="page_url" placeholder="请输入外链" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item" id="jump_type2" style="display: none;">
+                    <label class="layui-form-label" style="width: 120px;">选择文章页面</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input readonly type="text" id="selected_page_url2" name="selected_page_url2" placeholder="请选择文章页面" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;">备注</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <textarea id="ads_remark" name="ads_remark" placeholder="请输入备注" autocomplete="off" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"></label>
+                    <div class="layui-input-inline">
+                        <input type="hidden" name="ads_id" id="ads_id" value="@ViewContext.HttpContext.Request.Query["id"]" />
+                        <input type="hidden" id="ads_image" name="ads_image" value="" />
+                        <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确定保存">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'layedit', 'form','upload'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , upload = layui.upload
+            , layedit = layui.layedit;
+
+        // 监听跳转类型
+        form.on('select(select_link_id)', function (data) {
+            // console.log(`data=${JSON.stringify(data)}`);
+            if (data.value == 1) {
+                $("#jump_type1").hide();
+                $("#jump_type2").hide();
+            } else if (data.value == 2) {
+                $("#jump_type1").show();
+                $("#jump_type2").hide();
+            } else if (data.value == 3) {
+                $("#jump_type1").hide();
+                $("#jump_type2").show();
+            }
+        });
+
+        $("#jump_type2").click(function () {
+            layer.open({
+                type: 2
+                , title: '选择文章'
+                , content: '/articles/selected'
+                , maxmin: true
+                , area: ['750px', '550px']
+                , btn: ['确认']
+                , yes: function (index, layero) {
+                    // 点击确认触发 iframe 内容中的按钮提交
+                    var id = layero.find("iframe").contents().find("#selected_id").val();
+                    var name = layero.find("iframe").contents().find("#selected_name").val();
+                    // console.log(`id=${id},name=${name}`);
+                    $("#selected_page_url2").val(name);
+                    $("#page_url").val(id);
+                    layer.close(index);
+                }
+            });
+        });
+
+        // 拖拽上传
+        upload.render({
+            elem: '#banner-upload-drag'
+            ,headers: {
+                'RequestVerificationToken': csrfToken
+            }
+            , url: '/upload/uploadimg?catalogue=service&open_breviary=true'
+            , done: function (res) {
+                if (res.code > 0) {
+                    return layer.msg('上传失败');
+                }
+                $("#banner-upload-drag").html("<img style='max-width:368px;max-height:180px' src='@MR.Manage.Filters.AppSettingsFilter.GetSetting("Aliyun:OSS_URL")" + res.path + "'>");
+                $("#ads_image").val(res.path);
+            }
+        });
+
+        // 监听指定开关
+        form.on('switch(switch_is_show)', function (data) {
+            if (this.checked) {
+                $("#is_show").val(true);
+            } else {
+                $("#is_show").val(false);
+            }
+        });
+
+        // 默认加载
+        $(function () {
+            // 读取数据加载loading..
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/ads/details?id=' + $("#ads_id").val()
+                , data: null
+                , done: function (res) {
+                    layer.close(loading);
+                    $("#lang_id").val(res.data.lang_id);
+                    $("#ads_name").val(res.data.ads_name);
+                    $("#ads_image").val(res.data.ads_image);
+                    $("#ads_remark").val(res.data.ads_remark);
+                    $("#type_id").val(res.data.type_id);
+                    $("#user_id").val(res.data.user_id);
+                    $("#page_url").val(res.data.page_url);
+                    $("#sort_num").val(res.data.sort_num);
+                    $("#ads_content").val(res.data.ads_content);
+                    $("#switch_is_show").prop("checked", res.data.is_show);
+
+                    if (res.data.link_id == 1) {
+                        $("#jump_type1").hide();
+                        $("#jump_type2").hide();
+                    } else if (res.data.link_id == 2){
+                        $("#jump_type1").show();
+                        $("#jump_type2").hide();
+                    } else if (res.data.link_id == 3){
+                        $("#jump_type1").hide();
+                        $("#jump_type2").show();
+                    }
+
+                    if (res.data.link_id == 3){
+                        admin.req({
+                            url: '/articles/details/?id='+ res.data.page_url
+                            , data: null
+                            , done: function (res_artiles) {
+                                $("#selected_page_url2").val(res_artiles.data.article_title);
+                            }
+                        });
+                    }
+
+                    $("#banner-upload-drag").html("<img style='max-width:368px;max-height:180px' src='@MR.Manage.Filters.AppSettingsFilter.GetSetting("Aliyun:OSS_URL")" + res.data.ads_image + "'>");
+
+                    // 链接类型
+                    admin.req({
+                        url: '/adslinks/select'
+                        , done: function (res_links) {
+                            $.each(res_links.data, function (i, item) {
+                                if (res_links.data[i].link_id == res.data.link_id) {
+                                    $("#link_id").append("<option value=\"" + item.link_id + "\" selected>" + item.link_name + "</option>");
+                                }
+                                else {
+                                    $("#link_id").append("<option value=\"" + item.link_id + "\">" + item.link_name + "</option>");
+                                }
+                            });
+                            layui.form.render('select');
+                        }
+                    });
+
+                    form.render();
+                }
+            });
+
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/ads/edit/' + data.field.ads_id
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    if (res.errcode) {
+                        layer.open({
+                            title: '错误提示'
+                            , type: 1
+                            , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                            , btn: ["确定"]
+                        });
+                    } else if (res.code == 0 && res.count == 0) {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        });
+                    } else {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        }, function () {
+                            window.location.reload();
+                        });
+                    }
+                }
+            });
+        });
+    })
+</script>

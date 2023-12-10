@@ -1,0 +1,41 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@functions{
+    public string GetAntiXsrfRequestToken()
+    {
+        return Xsrf.GetAndStoreTokens(Context).RequestToken!;
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>@ViewData["Title"] - MESReport管理系统</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="~/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="~/layuiadmin/style/admin.css" media="all">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="~/MESReport.ico">
+    <link rel="icon" href="~/MESReport.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="~/MESReport.ico" type="image/x-icon" />
+    <script>
+    var csrfToken = '@GetAntiXsrfRequestToken()';
+    </script>
+    <style>
+        .layui-form-item .layui-input-block {
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+        }
+
+        .layui-layedit {
+            width: 100%;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <script src="~/layuiadmin/layui/ace/ace.js"></script>
+    @RenderBody()
+</body>
+</html>

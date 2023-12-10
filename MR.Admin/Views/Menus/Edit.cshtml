@@ -1,0 +1,133 @@
+﻿@{
+    ViewData["Title"] = "编辑菜单";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 菜单名称</label>
+        <div class="layui-input-block">
+            <input type="text" id="menu_name" name="menu_name" maxlength="50" lay-verify="required" placeholder="请输入菜单名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">ICON</label>
+        <div class="layui-input-block">
+            <input type="text" id="menu_icon" name="menu_icon" maxlength="50" placeholder="请输入ICON" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 路由地址</label>
+        <div class="layui-input-block">
+            <input type="text" id="menu_url" name="menu_url" maxlength="100" lay-verify="required" placeholder="请输入路由地址" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 排序</label>
+        <div class="layui-input-block">
+            <input type="text" id="menu_rank" name="menu_rank" maxlength="10" lay-verify="required" placeholder="请输入排序" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 菜单代码</label>
+        <div class="layui-input-block">
+            <input type="text" id="menu_code" name="menu_code" maxlength="50" lay-verify="required" placeholder="请输入菜单代码" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">状态</label>
+        <div class="layui-input-inline">
+            <input type="checkbox" lay-verify="required" lay-filter="switch_menu_status" name="switch_menu_status" lay-skin="switch" lay-text="启用|关闭" checked="checked">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="menu_id" name="menu_id" value="@ViewContext.HttpContext.Request.Query["id"]" />
+        <input type="hidden" id="parent_id" name="parent_id" />
+        <input type="hidden" id="menu_status" name="menu_status" value="true" />
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate;
+
+        // 监听指定开关
+        form.on('switch(switch_menu_status)', function (data) {
+            if (this.checked) {
+                $("#menu_status").val(true);
+            } else {
+                $("#menu_status").val(false);
+            }
+        });
+
+        // 默认加载
+        $(function () {
+            var menu_id = $("#menu_id").val();
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/menus/details'
+                , data: { id: menu_id }
+                , done: function (res) {
+                    layer.close(loading);
+                    
+                    $("#menu_name").val(res.data.menu_name);
+                    $("#menu_icon").val(res.data.menu_icon);
+                    $("#menu_url").val(res.data.menu_url);
+                    $("#menu_rank").val(res.data.menu_rank);
+                    $("#parent_id").val(res.data.parent_id);
+                    $("#menu_code").val(res.data.menu_code);
+                    if (!res.data.menu_status) {
+                        $(".layui-unselect").removeClass("layui-form-onswitch");
+                        $("#switch_menu_status").removeAttr("checked");
+                        $(".layui-unselect>em").html("关闭");
+                    }
+                }
+            });
+
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            var field = data.field;
+            var index = parent.layer.getFrameIndex(window.name);
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/menus/edit?id=' + data.field.menu_id
+                , data: data.field
+                , done: function (res) {
+                    layer.close(loading);
+                    parent.layui.treeTable.reload('area_tree_data');
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        parent.layer.close(index);
+                    });
+                }
+            });
+        });
+    })
+</script>

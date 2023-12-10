@@ -1,0 +1,367 @@
+﻿@{
+    ViewData["Title"] = "广告管理";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">广告标题:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="ads_name" name="ads_name" maxlength="50" placeholder="请输入广告标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">是否显示:</label>
+                    <div class="layui-input-inline">
+                        <select id="is_show" name="is_show">
+                            <option value="">请选择</option>
+                            <option value="1">显示</option>
+                            <option value="0">隐藏</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">跳转类型:</label>
+                    <div class="layui-input-inline">
+                        <select id="link_id" name="link_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">查询</button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建日期:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择创建日期" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="add"><i class="layui-icon">&#xe654;</i>新增广告</button>
+                </div>
+                <div class="layui-inline">
+                    @* <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出广告</button> *@
+                </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="toolbarDemo">
+            </script>
+            <script type="text/html" id="imgTpl">
+                <a style="cursor: pointer" onclick="preview(this);"><img src="{{ d.show_ads_image }}" width="55" /></a>
+            </script>
+            <script type="text/html" id="showTpl">
+                <input type="checkbox" name="is_show" lay-skin="switch" lay-text="是|否" lay-filter="check_is_show"
+                       value="{{ d.ads_id }}" data-json="{{ encodeURIComponent(JSON.stringify(d)) }}" {{ d.is_show ? 'checked' : '' }}>
+            </script>
+            <script type="text/html" id="linkTpl">
+                <a href="{{d.outside_url}}" class="layui-table-link" target="_blank">{{ d.outside_url }}</a>
+            </script>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+                elem: this,
+                range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 跳转类型:文章
+            admin.req({
+                url: '/adslinks/select'
+                , done: function (res_jumptype) {
+                    layer.close(loading);
+                    // console.log(`res=${res_jumptype.data}`);
+                    $.each(res_jumptype.data, function (i, item) {
+                        $("#link_id").append("<option value=\"" + res_jumptype.data[i].link_id + "\">" + res_jumptype.data[i].link_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+        });
+
+        // Ajax加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/ads/list",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [
+                [
+                    {
+                        type: "numbers",
+                        title: "序号",
+                        sort: !0,
+                        width: 80
+                    },
+                    {
+                        field: "ads_image",
+                        title: "图片",
+                        width: 85,
+                        templet: "#imgTpl"
+                    },
+                    {
+                        field: "ads_name",
+                        title: "标题",
+                        minWidth: 250
+                    },
+                    {
+                        field: "link_name",
+                        title: "跳转类型",
+                        width: 150
+                    },
+                    {
+                        field: "sort_num",
+                        title: "排序",
+                        edit: "text",
+                        align: "center",
+                        style: "background-color: #FFB800; color: #fff;",
+                        width: 150
+                    },
+                    {
+                        field: "is_show",
+                        title: "是否显示",
+                        templet: "#showTpl",
+                        width: 150
+                    },
+                    {
+                        field: "format_time",
+                        title: "创建日期",
+                        sort: !0,
+                        width: 180
+                    },
+                    {
+                        title: "操作",
+                        width: 200,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 15, 20, 25, 30],
+            where: {
+                type_id: 3
+            }
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var ads_id = t.data.ads_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此广告？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/ads/delete/' + ads_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("edit" === t.event) {
+                parent.layui.index.openTabsPage('/ads/edit/?id=' + ads_id, '编辑广告-' + ads_id);
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+
+            // 执行重载
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                    curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        // 监听是否显示操作
+        form.on('switch(check_is_show)', function (obj) {
+            var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/ads/setshow?id=' + this.value + '&status=' + obj.elem.checked
+                , done: function (res) {
+                    // console.log(`res=${res.msg}`);
+                }
+            });
+            json = table.clearCacheKey(json);
+        });
+
+        // 监听排序操作
+        table.on('edit(LAY-app-content-list)', function (obj) {
+            var value = obj.value;
+            var data = obj.data;
+            var field = obj.field;
+ 
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/ads/setsort?id=' + data.ads_id + '&sort_num=' + value
+                , done: function (res) {
+                    // console.log(`res=${res.msg}`);
+                }
+            });
+        });
+
+        var $ = layui.$, active = {
+            batchdel: function () {
+                var checkStatus = table.checkStatus('LAY-app-content-list')
+                    , checkData = checkStatus.data;
+
+                if (checkData.length === 0) {
+                    return layer.msg('请选择数据');
+                }
+
+                // 批量删除
+                layer.confirm('确定删除吗？', function (index) {
+                    checkData.forEach(function (n, i) {
+                        admin.req({
+                            headers: {
+                                'RequestVerificationToken': csrfToken
+                            },
+                            method: 'POST',
+                            url: '/ads/delete/' + n.ads_id
+                            , done: function (res) {
+                                // console.log(`res=${res.msg}`);
+                            }
+                        });
+                    });
+                    layer.msg('已删除');
+                });
+
+            },
+            add: function () {
+                parent.layui.index.openTabsPage('/ads/create?type_id=1', '新增广告');
+            },
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "ads_name": $("#ads_name").val(), "is_show": $("#is_show").val(), "link_id": $("#link_id").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportads'
+                    , done: function (res) {
+                        layer.close(loading);
+                        if (res.errcode) {
+                            layer.open({
+                                title: '错误提示'
+                                , type: 1
+                                , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                , btn: ["确定"]
+                            });
+                        } else if (res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $('.collapse_item').hide();
+                $('#collapse').html('展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i>');
+            }
+            else {
+                $('.collapse_item').show();
+                $('#collapse').html('收起<i style="right: -20px;" class="layui-icon layui-icon-up"></i>');
+            }
+            num++;
+        });
+    });
+
+    // 预览图片
+    function preview(t) {
+        var t = $(t).find("img");
+        layer.open({
+            type: 1,
+            title: '图片预览',
+            skin: 'layui-layer-rim',
+            area: ['80%', '80%'],
+            shadeClose: true,
+            end: function (index, layero) {
+                return false;
+            },
+            content: '<div style="text-align:center;padding: 20px;"><img src="' + $(t).attr('src') + '" /></div>'
+        });
+    }
+    </script>

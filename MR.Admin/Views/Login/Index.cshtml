@@ -1,0 +1,173 @@
+﻿@{
+    ViewData["Title"] = "登录";
+    Layout = null;
+}
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@functions{
+    public string GetAntiXsrfRequestToken()
+    {
+        return Xsrf.GetAndStoreTokens(Context).RequestToken!;
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>登录 - MR后台管理系统</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="~/layuiadmin/layui/css/layui.css" media="all">
+    <link href="~/css/framework-font.css" rel="stylesheet" />
+    <link href="~/css/framework-login.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <link rel="icon" href="~/MESReport.ico" type="image/x-icon" />
+    <script>
+    var csrfToken = '@GetAntiXsrfRequestToken()';
+    </script>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="container">
+            <div class="logo">
+                @*<i><img src="~/images/logo.png" /></i>*@
+                <h1><span></span>MESReport管理系统</h1>
+            </div>
+            <div class="login-form layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+                <div class="row">
+                    <input maxlength="20" type="text" name="user_name" id="user_name" lay-verify="required" placeholder="用户名">
+                    <i class="layadmin-user-login-icon layui-icon layui-icon-username"></i>
+                </div>
+                <div class="row">
+                    <input maxlength="20" type="password" name="user_password" id="user_password" lay-verify="required" placeholder="登录密码">
+                    <i class="layadmin-user-login-icon layui-icon layui-icon-password"></i>
+                </div>
+                <div class="row">
+                    <input id="captcha" name="captcha" lay-verify="required" maxlength="4" type="text" placeholder="验证码" style="width: 120px; float: left;">
+                    <div style="width: 160px; float: right; padding-top: 0px; padding-left: 5px;">
+                        <img style="cursor: pointer;" ondragstart="return false;" id="imgcode" class="authcode" src="/login/verifycode" width="160" height="45" />
+                    </div>
+                </div>
+                <div class="row">
+                    <button lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" class="layui-btn layui-btn-fluid"><span>登录</span></button>
+                </div>
+                <div class="row">
+                </div>
+            </div>
+            <div class="login_tips"></div>
+        </div>
+        <ul class="bg-bubbles">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
+    <div class="copyright">
+    </div>
+
+    <script src="~/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '/layuiadmin/'
+        }).extend({
+            index: '/lib/index'
+        }).use(['index', 'form'], function () {
+            var $ = layui.$
+                , form = layui.form
+                , admin = layui.admin;
+
+            $(function () {
+                // 获取TOKEN
+                admin.req({
+                    url: '/login/token'
+                    , done: function (res) {
+                        var token = window.localStorage.getItem("token");
+                        if (token == null) {
+                            window.localStorage.setItem("token", res.data);
+                            $("#imgcode").attr("src", "/login/verifycode?t=" + res.data);
+                        }
+                        else {
+                            $("#imgcode").attr("src", "/login/verifycode?t=" + token);
+                        }
+                    }
+                });
+            });
+
+            // 监听提交
+            form.on('submit(layuiadmin-app-form-submit)', function (data) {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                var token = window.localStorage.getItem("token");
+                data.field.token = token;
+
+                // 提交数据
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken,
+                    },
+                    method: 'POST',
+                    url: '/login/login'
+                    , data: data.field
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if (res.errcode) {
+                            layer.open({
+                                title: '错误提示'
+                                , type: 1
+                                , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                , btn: ["确定"]
+                            });
+                        } else {
+                            if (res.msg == '登录成功') {
+                                localStorage.setItem("menus", JSON.stringify(res.menus));
+                                top.location.href = "/main/";
+                            }
+                            else {
+                                layer.msg(res.msg, {
+                                    offset: '15px'
+                                    , icon: 1
+                                    , time: 2000
+                                });
+                                var token = window.localStorage.getItem("token");
+                                $("#imgcode").attr("src", "/login/verifycode?t=" + token + "&time=" + Math.random());
+                            }
+                        }
+                    }
+                });
+            });
+        });
+        // 初始化
+        function init() {
+            $('.wrapper').height($(window).height());
+            $(".container").css("margin-top", ($(window).height() - $(".container").height()) / 2 - 50);
+            $(window).resize(function (e) {
+                $('.wrapper').height($(window).height());
+                $(".container").css("margin-top", ($(window).height() - $(".container").height()) / 2 - 50);
+            });
+            $("#imgcode").click(function () {
+                var token = window.localStorage.getItem("token");
+                $("#imgcode").attr("src", "/login/verifycode?t=" + token + "&time=" + Math.random());
+            });
+
+            document.onkeydown = function (e) {
+                if (!e) e = window.event;
+                if ((e.keyCode || e.which) == 13) {
+                    document.getElementById("layuiadmin-app-form-submit").click();
+                }
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

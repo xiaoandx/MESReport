@@ -1,0 +1,368 @@
+﻿@{
+    ViewData["Title"] = "消息提醒";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">全部消息<span id="all_unready_num"></span></li>
+                <li>系统消息<span id="system_unready_num"></span></li>
+                <li>会员消息<span id="member_unready_num"></span></li>
+            </ul>
+            <div class="layui-tab-content">
+
+                <div class="layui-tab-item layui-show">
+                    <div class="LAY-app-message-btns" style="margin-bottom: 10px;">
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="all" data-flag="-1" data-events="ready">标记已读</button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="all" data-flag="-1" data-events="readyAll">全部已读</button>
+                    </div>
+
+                    <table id="LAY-app-message-all" lay-filter="LAY-app-message-all"></table>
+                    <script type="text/html" id="statusTpl">
+                        {{#  if(d.is_read){ }}
+                        <span class="layui-badge layui-bg-green">已读</span>
+                        {{#  } else { }}
+                        <span class="layui-badge layui-bg-gray">未读</span>
+                        {{#  } }}
+                    </script>
+                    <script type="text/html" id="linkTpl">
+                        <a lay-href="/messages/views/?id={{d.message_id}}" class="layui-table-link">{{ d.message_title }}</a>
+                    </script>
+                </div>
+                <div class="layui-tab-item">
+
+                    <div class="LAY-app-message-btns" style="margin-bottom: 10px;">
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="system" data-flag="1" data-events="ready">标记已读</button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="system" data-flag="1" data-events="readyAll">全部已读</button>
+                    </div>
+
+                    <table id="LAY-app-message-system" lay-filter="LAY-app-message-notice"></table>
+                </div>
+                <div class="layui-tab-item">
+
+                    <div class="LAY-app-message-btns" style="margin-bottom: 10px;">
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="member" data-flag="2" data-events="ready">标记已读</button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" data-type="member" data-flag="2" data-events="readyAll">全部已读</button>
+                    </div>
+
+                    <table id="LAY-app-message-member" lay-filter="LAY-app-message-direct"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/count/message'
+                , done: function (res) {
+                    layer.close(loading);
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    if (res.data.unread_num > 0) {
+                        $('#all_unready_num').html(res.data.all_unready_num > 0 ? "<span class=\"layui-badge\">" + res.data.all_unready_num + "</span>" : "");
+                        $('#system_unready_num').html(res.data.system_unready_num > 0 ? "<span class=\"layui-badge\">" + res.data.system_unready_num + "</span>" : "");
+                        $('#member_unready_num').html(res.data.member_unready_num > 0 ? "<span class=\"layui-badge\">" + res.data.member_unready_num + "</span>" : "");
+                    }
+                }
+            });
+        });
+
+        // 全部
+        table.render({
+            elem: "#LAY-app-message-all",
+            url: "/messages/list",
+            toolbar: false,
+            cols: [
+                [{
+                    type: "checkbox",
+                    fixed: "left"
+                },
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "type_name",
+                    title: "消息类别",
+                    width: 150
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    templet: "#memberTpl",
+                    width: 150
+                },
+                {
+                    field: "message_title",
+                    title: "消息标题",
+                    templet: "#linkTpl",
+                    width: 200
+                },
+                {
+                    field: "message_content",
+                    title: "消息内容",
+                    minWidth: 300
+                },
+                {
+                    field: "is_read",
+                    title: "是否已读",
+                    templet: "#statusTpl",
+                    width: 150
+                },
+                {
+                    field: "format_time",
+                    title: "创建日期",
+                    width: 180,
+                    sort: !0,
+                    width: 180
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where: {
+                type_id: -1
+            }
+        });
+
+        // 系统消息
+        table.render({
+            elem: "#LAY-app-message-system",
+            url: "/messages/list",
+            toolbar: false,
+            cols: [
+                [{
+                    type: "checkbox",
+                    fixed: "left"
+                },
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "type_name",
+                    title: "消息类别",
+                    width: 150
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    templet: "#memberTpl",
+                    width: 150
+                },
+                {
+                    field: "message_title",
+                    title: "消息标题",
+                    templet: "#linkTpl",
+                    width: 200
+                },
+                {
+                    field: "message_content",
+                    title: "消息内容",
+                    minWidth: 300
+                },
+                {
+                    field: "is_read",
+                    title: "是否已读",
+                    templet: "#statusTpl",
+                    width: 150
+                },
+                {
+                    field: "format_time",
+                    title: "创建日期",
+                    width: 180,
+                    sort: !0,
+                    width: 180
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where: {
+                type_id: 1
+            }
+        });
+
+        // 用户消息
+        table.render({
+            elem: "#LAY-app-message-member",
+            url: "/messages/list",
+            toolbar: false,
+            cols: [
+                [{
+                    type: "checkbox",
+                    fixed: "left"
+                },
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "type_name",
+                    title: "消息类别",
+                    width: 150
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    width: 150
+                },
+                {
+                    field: "message_title",
+                    title: "消息标题",
+                    templet: "#linkTpl",
+                    width: 200
+                },
+                {
+                    field: "message_content",
+                    title: "消息内容",
+                    minWidth: 300
+                },
+                {
+                    field: "is_read",
+                    title: "是否已读",
+                    templet: "#statusTpl",
+                    width: 150
+                },
+                {
+                    field: "format_time",
+                    title: "创建日期",
+                    width: 180,
+                    sort: !0,
+                    width: 180
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where: {
+                type_id: 2
+            }
+        });
+
+        var $ = layui.$, active = {
+            read: function () {
+                var checkStatus = table.checkStatus('LAY-app-content-list')
+                    , checkData = checkStatus.data;
+
+                if (checkData.length == 0) {
+                    return layer.msg('请选择数据');
+                }
+
+                checkData.forEach(function (n, i) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/message/read/' + n.article_id
+                        , done: function (res) {
+                            console.log(`res=${JSON.stringify(res)}`)
+                        }
+                    });
+                });
+            },
+        };
+
+        $('.layui-btn.layui-btn-primary').on('click', function () {
+            var type = $(this).data('type');
+            var events = $(this).data('events');
+            var flag = $(this).data('flag');
+            // console.log(`type=${type},events=${events},flag=${flag}`);
+
+            active[type] ? active[type].call(this) : '';
+
+            var id = 'LAY-app-message-' + type;
+            var checkStatus = table.checkStatus(id)
+                , checkData = checkStatus.data;
+
+            // console.log(`data length=${checkData.length}`);
+            if (events == 'ready' && checkData.length == 0) {
+                return layer.msg('请选择数据');
+            }
+
+            if (events == 'ready') {
+                checkData.forEach(function (n, i) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/messages/setready?id=' + n.message_id
+                        , done: function (res) {
+                            // console.log(`res=${JSON.stringify(res)}`)
+                            if (res.errcode) {
+                                layer.open({
+                                    title: '错误提示'
+                                    , type: 1
+                                    , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                    , btn: ["确定"]
+                                });
+                            } else {
+                                layer.msg(res.msg, {
+                                    offset: '15px'
+                                    , icon: 1
+                                    , time: 2000
+                                }, function () {
+                                    window.location.reload();
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+
+            if (events == 'readyAll') {
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    url: '/messages/setreadyall?type_id=' + flag
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`)
+                        if (res.errcode) {
+                            layer.open({
+                                title: '错误提示'
+                                , type: 1
+                                , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                , btn: ["确定"]
+                            });
+                        } else {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            }, function () {
+                                window.location.reload();
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
+    });
+    </script>

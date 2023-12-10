@@ -1,0 +1,113 @@
+﻿@{
+    ViewData["Title"] = "消息详情";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    .layui-input, .layui-select, .layui-textarea {
+        border-width: 0px;
+    }
+</style>
+<div class="layui-fluid" id="LAY-component-grid-mobile">
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-xs12">
+                <div class="layui-card">
+                    <div class="layui-card-header">消息信息</div>
+                    <div class="layui-card-body">
+                        <div style="padding: 20px 30px 0 0;">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">ID：</label>
+                                    <div class="layui-input-inline">
+                                        <span class="layui-badge layui-bg-blue" id="message_id" style="margin-top: 10px;">0</span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">会员昵称：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="member_name" name="member_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">是否已读：</label>
+                                    <div class="layui-input-inline">
+                                        <span id="is_read"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">消息标题：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="message_title" name="message_title" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">消息类别：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="type_name" name="type_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">创建日期：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="format_time" name="format_time" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">消息内容：</label>
+                                    <div class="layui-input-block">
+                                        <input disabled="disabled" type="text" id="message_content" name="message_content" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/messages/details'
+                , data: { id: @ViewContext.HttpContext.Request.Query["id"] }
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#message_id").html(res.data.message_id);
+                    $("#member_name").val(res.data.member_name);
+                    $("#to_member_id").val(res.data.to_member_id);
+                    $("#message_title").val(res.data.message_title);
+                    $("#message_content").val(res.data.message_content);
+                    $("#message_img").val(res.data.message_img);
+                    $("#is_read").html(res.data.is_read?"<span style=\"margin-top: 10px\" class=\"layui-badge layui-bg-green\">已读</span>":"<span style=\"margin-top: 10px\" class=\"layui-badge layui-bg-gray\">未读</span>");
+                    $("#type_name").val(res.data.type_name);
+                    $("#format_time").val(res.data.format_time);
+
+                }
+            });
+
+        });
+    })
+</script>

@@ -1,0 +1,228 @@
+﻿@{
+    ViewData["Title"] = "访问量详情";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    .layui-input, .layui-select, .layui-textarea {
+        border-width: 0px;
+    }
+</style>
+<div class="layui-fluid" id="LAY-component-grid-mobile">
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-xs12">
+                <div class="layui-card">
+                    <div class="layui-card-header">访问量信息</div>
+                    <div class="layui-card-body">
+                        <div style="padding: 20px 30px 0 0;">
+
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">访问量ID：</label>
+                                    <div class="layui-input-inline">
+                                        <span class="layui-badge layui-bg-blue" id="visit_id" style="margin-top: 10px;">0</span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">会员昵称：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="member_name" name="member_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">客户端IP：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="client_ip" name="client_ip" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">访问客户端：</label>
+                                    <div class="layui-input-inline">
+                                        <span class="layui-badge layui-bg-orange" id="source_name" style="margin-top: 10px;">0</span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">频道：</label>
+                                    <div class="layui-input-inline">
+                                        <span class="layui-badge layui-bg-orange" id="channel_name" style="margin-top: 10px;">0</span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">访问时间：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="format_time" name="format_time" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">客户端版本号：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="client_version" name="client_version" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">浏览器：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="client_browser" name="client_browser" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">搜索引擎：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="search_engine" name="search_engine" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">用户唯一标识：</label>
+                                    <div class="layui-input-block">
+                                        <span id="client_id" style="word-wrap: break-word;word-break:break-all;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">来源网址：</label>
+                                    <div class="layui-input-block">
+                                        <span id="referrer_url" style="word-wrap: break-word;word-break:break-all;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">被访问页面：</label>
+                                    <div class="layui-input-block">
+                                        <span id="visit_path" style="word-wrap: break-word;word-break:break-all;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">系统：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_system" name="device_system" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">品牌：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_brand" name="device_brand" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">型号：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_model" name="device_model" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">平台：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_platform" name="device_platform" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">语言：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_language" name="device_language" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">系统版本：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="device_version" name="device_version" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px;">设备信息：</label>
+                                    <div class="layui-input-block">
+                                        <span id="device_info" style="word-wrap: break-word;word-break:break-all;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">客户端信息：</label>
+                                    <div class="layui-input-block">
+                                        <span id="client_info" style="word-wrap: break-word;word-break:break-all;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-block">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">客户端Cookies：</label>
+                                    <div class="layui-input-block" style="word-wrap: break-word;">
+                                        <span id="client_cookies"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/visits/details'
+                , data: { id: @ViewContext.HttpContext.Request.Query["id"] }
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    console.log(res.data);
+                    $("#visit_id").html(res.data.visit_id);
+                    $("#referrer_url").html("<a href=\""+ res.data.referrer_url +"\" target=\"_blank\"><span class=\"layui-badge layui-bg-blue\">"+ res.data.referrer_url ? res.data.referrer_url : '-' +"</span></a>");
+                    $("#visit_path").html("<a href=\"javascript:\"><span class=\"layui-badge layui-bg-blue\">"+ res.data.visit_path +"</span></a>");
+                    $("#search_engine").val(res.data.search_engine);
+                    $("#client_browser").val(res.data.client_browser);
+                    $("#client_version").val(res.data.client_version);
+                    $("#client_info").html("<span style=\"margin-top: 10px\" >"+ res.data.client_info +"</span>");
+                    $("#client_cookies").html("<span style=\"margin-top: 10px\" >"+ res.data.client_cookies +"</span>");
+                    $("#client_device").val(res.data.client_device);
+                    $("#device_info").html("<span style=\"margin-top: 10px\" >"+ res.data.device_info +"</span>");
+                    $("#temp_info").html(res.data.temp_info);
+                    $("#member_name").val(res.data.member_name ? res.data.member_name: "游客");
+                    $("#company_id").val(res.data.company_id);
+                    $("#client_id").html(res.data.client_id);
+                    $("#client_ip").val(res.data.client_ip);
+                    $("#format_time").val(res.data.format_time);
+                    $("#device_system").val(res.data.device_system);
+                    $("#device_brand").val(res.data.device_brand);
+                    $("#device_model").val(res.data.device_model);
+                    $("#device_platform").val(res.data.device_platform);
+                    $("#device_language").val(res.data.device_language);
+                    $("#device_version").val(res.data.device_version);
+                    $("#source_name").html(res.data.source_name);
+                    $("#channel_name").html(res.data.channel_name);
+                    $("#visit_remark").val(res.data.visit_remark);
+                }
+            });
+
+        });
+    })
+</script>

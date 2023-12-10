@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = null;
+}
+<div>退出登录</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin;
+
+        $(function () {
+            localStorage.removeItem("menus");
+            admin.req({
+                url: '/users/logout'
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    location.href = '/';
+                }
+            });
+        });
+
+    });
+</script>

@@ -1,0 +1,418 @@
+﻿@{
+    ViewData["Title"] = "日志统计";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <!-- 按日统计 -->
+    <div class="layui-col-sm12" style="margin-bottom: 10px">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                日志统计
+            </div>
+            <div class="layui-card-body">
+                <div class="layui-row">
+                    <div class="layui-col-sm12">
+                        <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade" lay-filter="LAY-index-pagetwo">
+                            <div carousel-item id="LAY-chart-logs-day">
+                                <div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 检索数据 -->
+    <div class="layui-col-sm12">
+        <div class="layui-card">
+            <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">日志类型:</label>
+                        <div class="layui-input-inline">
+                            <select id="type_id" name="type_id">
+                                <option value="">选择日志类型</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">用户名:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="member_name" name="member_name" maxlength="50" placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">日志内容:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="log_content" name="log_content" maxlength="50" placeholder="请输入日志内容" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                            查询
+                        </button>
+                        <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                        <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                    </div>
+                </div>
+                <div class="layui-form-item collapse_item" style="display:none;">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">客户端类型:</label>
+                        <div class="layui-input-inline">
+                            <select id="platform_id" name="platform_id">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">客户端IP:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="client_ip" name="client_ip" maxlength="50" placeholder="请输入客户端IP" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">记录时间:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择记录时间" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-card-body">
+                <div class="layui-form-item" style="margin-bottom: 5px;">
+                    <div class="layui-inline">
+                        @* <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出日志</button> *@
+                    </div>
+                </div>
+            
+                <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+                <script type="text/html" id="toolbarDemo">
+                </script>
+                <script type="text/html" id="table-content-list">
+                    <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+                </script>
+                <script type="text/html" id="linkTpl">
+                    <a lay-href="/logs/views/?id={{d.log_id}}" class="layui-table-link">{{ d.log_content }}</a>
+                </script>
+                <script type="text/html" id="nameTpl">
+                    {{#  if(d.app_type ==  1){ }}
+                    {{d.user_phone}}
+                    {{#  } else { }}
+                    {{d.member_name}}
+                    {{#  } }}
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate','util'], function () {
+        var $ = layui.$
+            ,table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+               elem: this,
+               range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 日志类型
+            admin.req({
+                url: '/logtypes/select'
+                , done: function (res_typeid) {
+                    layer.close(loading);
+                    // console.log(res_typeid.data);
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_id").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+            // 客户端类型
+            admin.req({
+                url: '/platforms/select'
+                , done: function (res_platforms) {
+                    layer.close(loading);
+                    // console.log(res_platforms.data);
+                    $.each(res_platforms.data, function (i, item) {
+                        $("#platform_id").append("<option value=\"" + res_platforms.data[i].platform_id + "\">" + res_platforms.data[i].platform_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 日志统计
+        admin.req({
+            url: '/logs/chartbyday'
+            , data: null
+            , done: function (res) {
+                layer.close(loading);
+                // console.log(`res=${JSON.stringify(res)}`);
+
+                var month_num = [];
+                var month_data = [];
+                $.each(res.data, function (i, item) {
+                    //console.log('month=' + res.data[i].month + 'count=' + res.data[i].count);
+                    month_num.push(res.data[i].year + "年" + res.data[i].month + "月" + res.data[i].day + "日");
+                    month_data.push(res.data[i].count);
+                });
+
+                layui.define(function (e) {
+                    var a = layui.admin;
+                    layui.use(["admin", "carousel"], function () {
+                        var e = layui.$,
+                            a = (layui.admin, layui.carousel),
+                            l = layui.element,
+                            t = layui.device();
+                        e(".layadmin-carousel").each(function () {
+                            var l = e(this);
+                            a.render({
+                                elem: this,
+                                width: "100%",
+                                arrow: "none",
+                                interval: l.data("interval"),
+                                autoplay: l.data("autoplay") === !0,
+                                trigger: t.ios || t.android ? "click" : "hover",
+                                anim: l.data("anim")
+                            })
+                        }), l.render("progress")
+                    }), layui.use(["carousel", "echarts"], function () {
+                        var e = layui.$,
+                            a = (layui.carousel, layui.echarts),
+                            l = [],
+                            t = [{
+                                tooltip: {
+                                    trigger: "axis"
+                                },
+                                calculable: !0,
+                                legend: {
+                                    data: ["每日日志统计走势图"]
+                                },
+                                xAxis: [{
+                                    type: "category",
+                                    data: month_num,
+                                    axisLabel: {
+                                        formatter: "{value}"
+                                    }
+                                }],
+                                yAxis: [{
+                                    type: "value",
+                                    name: "日志总数",
+                                    axisLabel: {
+                                        formatter: "{value}"
+                                    }
+                                }],
+                                series: [{
+                                    name: "日志条数",
+                                    type: "line",
+                                    itemStyle: {
+									    normal: {
+										    areaStyle: {
+											    type: "default"
+										    }
+									    }
+								    },
+                                    data: month_data
+                                }]
+                            }],
+                            i = e("#LAY-chart-logs-day").children("div"),
+                            n = function (e) {
+                                l[e] = a.init(i[e], layui.echartsTheme), l[e].setOption(t[e]), window.onresize = l[e].resize
+                            };
+                        i[0] && n(0)
+                    })
+                });
+
+            }
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/logs/list",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [
+                [
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "type_name",
+                    title: "日志类型",
+                    width: 120
+                },
+                {
+                    field: "member_name",
+                    title: "用户名",
+                    width: 150
+                },
+                {
+                    field: "log_content",
+                    title: "日志内容",
+                    minWidth: 300,
+                    templet: "#linkTpl"
+                },
+                {
+                    field: "platform_name",
+                    title: "客户端类型",
+                    width: 120
+                },
+                {
+                    field: "client_ip",
+                    title: "客户端IP",
+                    width: 150
+                },
+                {
+                    field: "page_url",
+                    title: "当前操作页面URL",
+                    width: 200
+                },
+                {
+                    field: "format_time",
+                    title: "记录时间",
+                    sort: !0,
+                    width: 180
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500]
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var log_id = t.data.log_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此日志？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/logs/delete/' + log_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("edit" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "编辑日志",
+                    content: "/logs/edit?id=" + log_id,
+                    maxmin: !0,
+                    area: ["550px", "550px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                    curr: 1
+                }
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "type_id": $("#type_id").val(), "member_name": $("#member_name").val(), "platform_id": $("#platform_id").val(), "log_content": $("#log_content").val(), "client_ip": $("#client_ip").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportlogs'
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px;">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+    });
+</script>

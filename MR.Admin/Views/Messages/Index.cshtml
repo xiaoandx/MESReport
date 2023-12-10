@@ -1,0 +1,276 @@
+﻿@{
+    ViewData["Title"] = "消息列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">消息类别:</label>
+                    <div class="layui-input-inline">
+                        <select id="type_id" name="type_id">
+                            <option value="">选择消息类别</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">会员昵称:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="member_name" name="member_name" maxlength="50" placeholder="请输入会员昵称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">消息标题:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="message_title" name="message_title" maxlength="50" placeholder="请输入消息标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                        查询
+                    </button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">消息内容:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="message_content" name="message_content" maxlength="50" placeholder="请输入消息内容" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">是否已读:</label>
+                    <div class="layui-input-inline">
+                        <select id="is_read" name="is_read">
+                            <option value="">请选择</option>
+                            <option value="1">已读</option>
+                            <option value="0">未读</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建日期:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择创建日期" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+              <div class="layui-inline">
+                @* <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出消息</button> *@
+              </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="toolbarDemo">
+            </script>
+            <script type="text/html" id="statusTpl">
+                {{#  if(d.is_read){ }}
+                <span class="layui-badge layui-bg-green">已读</span>
+                {{#  } else { }}
+                <span class="layui-badge layui-bg-gray">未读</span>
+                {{#  } }}
+            </script>
+            <script type="text/html" id="linkTpl">
+                <a lay-href="/messages/views/?id={{d.message_id}}" class="layui-table-link">{{ d.message_title }}</a>
+            </script>
+            <script type="text/html" id="memberTpl">
+                <a lay-href="/members/views/?id={{d.member_id}}" class="layui-table-link">{{ d.member_name }}</a>
+            </script>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="views"><i class="layui-icon layui-icon-search"></i>详情</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+               elem: this,
+               range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 消息类别
+            admin.req({
+                url: '/messagetypes/select'
+                , done: function (res_typeid) {
+                    layer.close(loading);
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_id").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/messages/list",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [
+                [
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80
+                },
+                {
+                    field: "type_name",
+                    title: "消息类别",
+                    width: 150
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    templet: "#memberTpl",
+                    width: 150
+                },
+                {
+                    field: "message_title",
+                    title: "消息标题",
+                    templet: "#linkTpl",
+                    width: 200
+                },
+                {
+                    field: "message_content",
+                    title: "消息内容",
+                    minWidth: 300
+                },
+                {
+                    field: "is_read",
+                    title: "是否已读",
+                    templet: "#statusTpl",
+                    width: 150
+                },
+                {
+                    field: "format_time",
+                    title: "创建日期",
+                    width: 180,
+                    sort: !0,
+                    width: 180
+                },
+                {
+                    title: "操作",
+                    width: 120,
+                    align: "center",
+                    fixed: "right",
+                    toolbar: "#table-content-list"
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500]
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var message_id = t.data.message_id;
+            if ("views" === t.event) {
+                parent.layui.index.openTabsPage('/messages/views/?id=' + message_id, '消息详情-' + message_id);
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                    curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "type_id": $("#type_id").val(), "member_name": $("#member_name").val(), "message_title": $("#message_title").val(), "message_content": $("#message_content").val(), "is_read": $("#is_read").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportmessages'
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px;">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+    });
+</script>

@@ -1,0 +1,217 @@
+﻿@{
+    ViewData["Title"] = "新增广告";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form-item" id="picture-one">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 图片</label>
+                    <div class="layui-input-block">
+                        <div class="layui-upload-drag" id="banner-upload-drag">
+                            <i class="layui-icon"></i>
+                            <p>点击上传，或将图片拖拽到此处</p>
+                            <label style="color:#dc2828"> *封面图片尺寸建议: 500×350(px)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 标题</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="text" id="ads_name" name="ads_name" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 排序</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="number" id="sort_num" name="sort_num" lay-verify="required" placeholder="请输入排序" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;">是否显示</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="checkbox" lay-verify="required" lay-filter="switch_is_show" name="switch_is_show" lay-skin="switch" lay-text="是|否" checked>
+                        <input type="hidden" name="is_show" id="is_show" value="true" />
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"><span style="color:red">*</span> 跳转类型</label>
+                    <div class="layui-input-block">
+                        <select id="link_id" name="link_id" lay-verify="required" lay-filter="select_link_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item" id="jump_type1" style="display: none;">
+                    <label class="layui-form-label" style="width: 120px;">外链</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="text" id="page_url" name="page_url" placeholder="请输入外链" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item" id="jump_type2" style="display: none;">
+                    <label class="layui-form-label" style="width: 120px;">选择文章页面</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input readonly type="text" id="selected_page_url2" name="selected_page_url2" placeholder="请选择文章页面" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;">备注</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <textarea id="ads_remark" name="ads_remark" placeholder="请输入备注" autocomplete="off" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 120px;"></label>
+                    <div class="layui-input-inline">
+                        <input type="hidden" id="ads_image" name="ads_image" value="" />
+                        <input type="button" class="layui-btn" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认提交">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'layedit', 'form', 'laydate','upload'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , layedit = layui.layedit
+            , upload = layui.upload
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+            
+            // 跳转类型:文章
+            admin.req({
+                url: '/adslinks/select'
+                , done: function (res_links) {
+                    layer.close(loading);
+                    // console.log(`res=${res_jumptype.data}`);
+                    $.each(res_links.data, function (i, item) {
+                        $("#link_id").append("<option value=\"" + res_links.data[i].link_id + "\">" + res_links.data[i].link_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+           
+        });
+
+        // 监听跳转类型
+        form.on('select(select_link_id)', function (data) {
+            // console.log(`data=${JSON.stringify(data)}`);
+            if(data.value == 1){
+                $("#jump_type1").hide();
+                $("#jump_type2").hide();
+            } else if(data.value == 2){
+                $("#jump_type1").show();
+                $("#jump_type2").hide();
+            } else if(data.value == 3){
+                $("#jump_type1").hide();
+                $("#jump_type2").show();
+            }
+        });
+        // 跳转至选择页面
+        $("#jump_type2").click(function () {
+            layer.open({
+                type: 2
+                , title: '选择文章'
+                , content: '/articles/selected'
+                , maxmin: true
+                , area: ['750px', '550px']
+                , btn: ['确认']
+                , yes: function (index, layero) {
+                    // 点击确认触发 iframe 内容中的按钮提交
+                    var id = layero.find("iframe").contents().find("#selected_id").val();
+                    var name = layero.find("iframe").contents().find("#selected_name").val();
+                    $("#selected_page_url2").val(name);
+                    $("#page_url").val(id);
+                    layer.close(index);
+                }
+            });
+        });
+
+        // 拖拽上传
+        upload.render({
+            elem: '#banner-upload-drag'
+            ,headers: {
+                'RequestVerificationToken': csrfToken
+            }
+            , url: '/upload/uploadimg?catalogue=service&open_breviary=true'
+            , done: function (res) {
+                // 如果上传失败
+                if (res.code > 0) {
+                    return layer.msg('上传失败');
+                }
+                $("#banner-upload-drag").html("<img style='max-width:368px;max-height:180px' src='@MR.Manage.Filters.AppSettingsFilter.GetSetting("Aliyun:OSS_URL")" + res.path+"'>");
+                $("#ads_image").val(res.path);
+            }
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            if (data.field.ads_image.length <= 0) {
+                return layer.msg("请选择图片");
+            }
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/ads/create'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    if (res.errcode) {
+                        layer.open({
+                            title: '错误提示'
+                            , type: 1
+                            , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                            , btn: ["确定"]
+                        });
+                    } else if (res.code == 0 && res.count == 0) {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        });
+                    } else {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        }, function () {
+                            window.location.reload();
+                        });
+                    }
+                }
+            });
+        });
+    })
+</script>

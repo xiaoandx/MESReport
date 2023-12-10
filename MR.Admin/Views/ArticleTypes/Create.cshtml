@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "新增分类";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 分类名称</label>
+        <div class="layui-input-block">
+            <input type="text" id="type_name" name="type_name" maxlength="50" lay-verify="required" placeholder="请输入分类名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否启用</label>
+        <div class="layui-input-block">
+            <input type="checkbox" lay-verify="required" lay-filter="switch_type_status" name="switch_type_status" lay-skin="switch" lay-text="启用|禁用" checked>
+            <input type="hidden" name="type_status" id="type_status" value="true" />
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="parent_id" name="parent_id" value="@ViewContext.HttpContext.Request.Query["parent_id"]">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin;
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-submit)', function (data) {
+            var field = data.field; // 获取提交的字段
+            var index = parent.layer.getFrameIndex(window.name); // 先得到当前iframe层的索引
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/articletypes/create'
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    parent.layui.table.reload('type_tree_data'); // 重载表格
+                    if (res.errcode) {
+                        layer.open({
+                            title: '错误提示'
+                            , type: 1
+                            , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                            , btn: ["确定"]
+                        });
+                    } else {
+                        layer.msg(res.msg, {
+                            offset: '15px'
+                            , icon: 1
+                            , time: 2000
+                        }, function () {
+                            parent.layer.close(index);
+                        });
+                    }
+                }
+            });
+        });
+
+        // 监听是否启用
+        form.on('switch(switch_type_status)', function (data) {
+            // console.log(`type_status checked=${this.checked}`)
+            if (this.checked) {
+                $("#type_status").val(true);
+            } else {
+                $("#type_status").val(false);
+            }
+        });
+    })
+</script>

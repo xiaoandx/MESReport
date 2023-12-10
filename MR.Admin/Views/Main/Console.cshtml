@@ -1,0 +1,321 @@
+﻿@{
+    ViewData["Title"] = "控制台";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>控制台</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="~/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="~/layuiadmin/style/admin.css" media="all">
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <!-- 第1排 -->
+            <div class="layui-col-sm6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        消息
+                        <span class="layui-badge layui-bg-green layuiadmin-badge">全部</span>
+                    </div>
+                    <div class="layui-card-body layuiadmin-card-list">
+                        <a lay-href="/messages/chart"><p class="layuiadmin-big-font"><span style="display:none">消息统计</span><span id="total_data_month3">0</span></p></a>
+                        <p>
+                            今日新增
+                            <span class="layuiadmin-span-color"><span id="total_data_day3">0</span> <i class="layui-inline layui-icon layui-icon-notice"></i></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        验证码
+                        <span class="layui-badge layui-bg-cyan layuiadmin-badge">全部</span>
+                    </div>
+                    <div class="layui-card-body layuiadmin-card-list">
+                        <a lay-href="/codes/"><p class="layuiadmin-big-font"><span style="display:none">验证码统计</span><span id="total_data_month6">0</span></p></a>
+                        <p>
+                            今日新增
+                            <span class="layuiadmin-span-color"><span id="total_data_day6">0</span> <i class="layui-inline layui-icon layui-icon-vercode"></i></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        意见反馈
+                        <span class="layui-badge layui-bg-green layuiadmin-badge">全部</span>
+                    </div>
+                    <div class="layui-card-body layuiadmin-card-list">
+                        <a lay-href="/feedback/chart"><p class="layuiadmin-big-font"><span style="display:none">意见反馈统计</span><span id="total_data_month7">0</span></p></a>
+                        <p>
+                            今日新增
+                            <span class="layuiadmin-span-color"><span id="total_data_day7">0</span> <i class="layui-inline layui-icon layui-icon-edit"></i></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        日志
+                        <span class="layui-badge layui-bg-orange layuiadmin-badge">全部</span>
+                    </div>
+                    <div class="layui-card-body layuiadmin-card-list">
+                        <a lay-href="/logs/chart"><p class="layuiadmin-big-font"><span style="display:none">日志统计</span><span id="total_data_month8">0</span></p></a>
+                        <p>
+                            今日新增
+                            <span class="layuiadmin-span-color"><span id="total_data_day8">0</span> <i class="layui-inline layui-icon layui-icon-list"></i></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- 走势图 -->
+            <div class="layui-col-sm12">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        访问量统计
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="layui-row">
+                            <div class="layui-col-sm12">
+                                <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade" lay-filter="LAY-index-pagetwo">
+                                    <div carousel-item id="LAY-chart-visit">
+                                        <div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm12">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-sm4">
+                        <div class="layui-card">
+                            <div class="layui-card-header">日志记录</div>
+                            <div class="layui-card-body">
+                                <table class="layui-table layuiadmin-page-table" lay-skin="line" style="table-layout:fixed;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 35%">用户名</th>
+                                            <th style="width: 30%">操作类型</th>
+                                            <th style="width: 35%">操作时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logs_list">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-sm4">
+                        <div class="layui-card">
+                            <div class="layui-card-header">活跃用户</div>
+                            <div class="layui-card-body">
+                                <table class="layui-table layuiadmin-page-table" lay-skin="line" style="table-layout:fixed;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%">昵称</th>
+                                            <th style="width: 25%">注册时间</th>
+                                            <th style="width: 35%">类型</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="members_list">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-sm4">
+                        <div class="layui-card">
+                            <div class="layui-card-header">活跃管理员</div>
+                            <div class="layui-card-body">
+                                <table class="layui-table layuiadmin-page-table" lay-skin="line" style="table-layout:fixed;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%">用户名</th>
+                                            <th style="width: 35%">最后登录</th>
+                                            <th style="width: 25%">角色</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin_list">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="~/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '/layuiadmin/'
+        }).extend({
+            index: '/lib/index'
+        }).use(['index', 'form','carousel'], function () {
+            var $ = layui.$
+                , form = layui.form
+                , admin = layui.admin;
+
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 默认加载
+            $(function () {
+
+                // 访问量统计
+                admin.req({
+                    url: '/visits/chartbyday'
+                    , data: null
+                    , done: function (res) {
+                        layer.close(loading);
+                        // console.log(`res=${JSON.stringify(res)}`);
+
+                        var month_num = [];
+                        var month_data = [];
+                        $.each(res.data, function (i, item) {
+                            month_num.push(res.data[i].year + "年" + res.data[i].month + "月" + res.data[i].day + "日");
+                            month_data.push(res.data[i].count);
+                        });
+
+                        layui.define(function (e) {
+                            var a = layui.admin;
+                            layui.use(["admin", "carousel"], function () {
+                                var e = layui.$,
+                                    a = (layui.admin, layui.carousel),
+                                    l = layui.element,
+                                    t = layui.device();
+                                e(".layadmin-carousel").each(function () {
+                                    var l = e(this);
+                                    a.render({
+                                        elem: this,
+                                        width: "100%",
+                                        arrow: "none",
+                                        interval: l.data("interval"),
+                                        autoplay: l.data("autoplay") === !0,
+                                        trigger: t.ios || t.android ? "click" : "hover",
+                                        anim: l.data("anim")
+                                    })
+                                }), l.render("progress")
+                            }), layui.use(["carousel", "echarts"], function () {
+                                var e = layui.$,
+                                    a = (layui.carousel, layui.echarts),
+                                    l = [],
+                                    t = [{
+                                        tooltip: {
+                                            trigger: "axis"
+                                        },
+                                        calculable: !0,
+                                        legend: {
+                                            data: ["每日访问量走势图"]
+                                        },
+                                        xAxis: [{
+                                            type: "category",
+                                            data: month_num,
+                                            axisLabel: {
+                                                formatter: "{value}"
+                                            }
+                                        }],
+                                        yAxis: [{
+                                            type: "value",
+                                            name: "PV",
+                                            axisLabel: {
+                                                formatter: "{value}"
+                                            }
+                                        }],
+                                        series: [{
+                                            name: "访问量",
+                                            type: "line",
+                                            itemStyle: {
+									            normal: {
+										            areaStyle: {
+											            type: "default"
+										            }
+									            }
+								            },
+                                            data: month_data
+                                        }]
+                                    }],
+                                    i = e("#LAY-chart-visit").children("div"),
+                                    n = function (e) {
+                                        l[e] = a.init(i[e], layui.echartsTheme), l[e].setOption(t[e]), window.onresize = l[e].resize
+                                    };
+                                i[0] && n(0)
+                            })
+                        });
+
+                    }
+                });
+
+                // 统计数据
+                admin.req({
+                    url: '/count/console'
+                    , done: function (res) {
+                        $('#total_data_month3').html(res.data.total_data_month3);
+                        $('#total_data_day3').html(res.data.total_data_day3);
+                        $('#total_data_month6').html(res.data.total_data_month6);
+                        $('#total_data_day6').html(res.data.total_data_day6);
+                        $('#total_data_month7').html(res.data.total_data_month7);
+                        $('#total_data_day7').html(res.data.total_data_day7);
+                        $('#total_data_month8').html(res.data.total_data_month8);
+                        $('#total_data_day8').html(res.data.total_data_day8);
+                    }
+                });
+
+                // 日志记录
+                admin.req({
+                    url: '/logs/active/?page=1&limit=5'
+                    , done: function (res) {
+                        $.each(res.data, function (i, item) {
+                            $("#logs_list").append("<tr><td style=\"word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\"><span class=\"first\" style=\"overflow:hidden\">" + res.data[i].member_name + "</span></td><td><span>" + res.data[i].type_name + "</span></td><td><i class=\"layui-icon layui-icon-log\"> " + res.data[i].format_time + "</i></td></tr>");
+                        });
+                        layui.form.render('select');
+                    }
+                });
+
+                // 活跃会员
+                admin.req({
+                    url: '/users/active?page=1&limit=5'
+                    , done: function (res) {
+                        if (res.errcode) {
+                            top.location.href = "/";
+                        }
+                        else {
+                            $.each(res.data, function (i, item) {
+                                $("#members_list").append("<tr><td style=\"width:100%; word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\"><span class=\"first\">" + res.data[i].user_name + "</span></td><td><i class=\"layui-icon layui-icon-log\"> " + res.data[i].last_date + "</i></td><td><span>" + res.data[i].role_name + "</span></td></tr>");
+                            });
+                            layui.form.render('select');
+                        }
+                    }
+                });
+
+                // 活跃管理员
+                admin.req({
+                    url: '/users/active?page=1&limit=5'
+                    , done: function (res) {
+                        $.each(res.data, function (i, item) {
+                            $("#admin_list").append("<tr><td style=\"width:100%; word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\"><span class=\"first\" style=\"overflow:hidden\">" + res.data[i].user_name + "</span></td><td><i class=\"layui-icon layui-icon-log\"> " + res.data[i].last_date + "</i></td><td><span>" + res.data[i].role_name + "</span></td></tr>");
+                        });
+                        layui.form.render('select');
+                    }
+                });
+            });
+        })
+    </script>
+</body>
+</html>

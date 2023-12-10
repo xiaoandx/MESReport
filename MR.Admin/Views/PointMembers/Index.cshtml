@@ -1,0 +1,183 @@
+﻿@{
+    ViewData["Title"] = "会员积分列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">昵称:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="member_name" name="member_name" maxlength="50" placeholder="请输入昵称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号:</label>
+                    <div class="layui-input-inline">
+                        <input type="tel" id="mobile_phone" name="mobile_phone" maxlength="11" placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">总积分:</label>
+                    <div class="layui-input-inline">
+                        <input type="number" id="total_point" name="total_point" placeholder="请输入会员总积分" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">查询</button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export">导出会员积分</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="memberTpl">
+                <a lay-href="/members/views/?id={{d.member_id}}" class="layui-table-link">{{ d.member_name }}</a>
+            </script>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="views"><i class="layui-icon layui-icon-search"></i>积分明细</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate','util'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/pointmembers/list",
+            toolbar: false,
+            cols: [
+                [
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80,
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    templet: "#memberTpl",
+                    minWidth: 250
+                },
+                {
+                    field: "mobile_phone",
+                    title: "手机号",
+                    width: 200
+                },
+                {
+                    field: "total_point",
+                    title: "会员总积分",
+                    width: 200
+                },
+                {
+                    field: "available_point",
+                    title: "可用积分",
+                    width: 200
+                },
+                {
+                    field: "froze_point",
+                    title: "冻结积分",
+                    width: 200
+                },
+                {
+                    title: "操作",
+                    width: 180,
+                    align: "center",
+                    fixed: "right",
+                    toolbar: "#table-content-list"
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500]
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var member_id = t.data.member_id;
+            if ("views" === t.event) {
+                parent.layui.index.openTabsPage('/pointrecords/?id=' + member_id, '积分明细-' + member_id);
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                  curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "member_name": $("#member_name").val(), "mobile_phone": $("#mobile_phone").val(), "total_point": $("#total_point").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportpointmembers'
+                    , done: function (res) {
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px; ">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                      }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

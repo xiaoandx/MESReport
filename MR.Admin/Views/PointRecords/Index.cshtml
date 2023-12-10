@@ -1,0 +1,225 @@
+﻿@{
+    ViewData["Title"] = "积分记录列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">积分类型:</label>
+                    <div class="layui-input-inline">
+                        <select id="point_id" name="point_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">积分数量:</label>
+                    <div class="layui-input-inline">
+                        <input type="number" id="point_num" name="point_num" placeholder="请输入积分数量" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">积分说明:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="point_action" name="point_action" maxlength="50" placeholder="请输入积分说明" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                        查询
+                    </button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择日期范围" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+              <div class="layui-inline">
+                <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出积分记录</button>
+              </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate','util'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+               elem: this,
+               range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            // 读取数据加载loading..
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 积分类型
+            admin.req({
+                url: '/points/select'
+                , done: function (res_pointid) {
+                    layer.close(loading);
+                    $.each(res_pointid.data, function (i, item) {
+                        $("#point_id").append("<option value=\"" + res_pointid.data[i].point_id + "\">" + res_pointid.data[i].point_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/pointrecords/list",
+            toolbar: false,
+            cols: [
+                [
+                {
+                    type: "numbers",
+                    title: "序号",
+                    width: 80,
+                },
+                {
+                    field: "member_name",
+                    title: "会员昵称",
+                    minWidth: 250
+                },
+                {
+                    field: "point_name",
+                    title: "积分类型",
+                    width: 200
+                },
+                {
+                    field: "point_num",
+                    title: "积分数量",
+                    width: 200
+                },
+                {
+                    field: "point_action",
+                    title: "积分说明",
+                    width: 200
+                },
+                {
+                    field: "point_remark",
+                    title: "备注",
+                    width: 250
+                },
+                {
+                    field: "format_time",
+                    title: "创建日期",
+                    width: 200
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where: {
+                member_id: @ViewContext.HttpContext.Request.Query["id"]
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                  curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "member_id": @ViewContext.HttpContext.Request.Query["id"], "point_id": $("#point_id").val(), "point_num": $("#point_num").val(), "point_action": $("#point_action").val(), "select_date": $("#created_at").val()},
+                    url: '/excel/exportpointrecords'
+                    , done: function (res) {
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px; ">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+    });
+</script>

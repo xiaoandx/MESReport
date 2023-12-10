@@ -1,0 +1,137 @@
+﻿@{
+    ViewData["Title"] = "日志详情";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    .layui-input, .layui-select, .layui-textarea {
+        border-width: 0px;
+    }
+</style>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">日志信息</div>
+                <div class="layui-card-body" pad15>
+                    <div style="padding: 20px 30px 0 0;">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">日志ID：</label>
+                                <div class="layui-input-inline">
+                                    <span class="layui-badge layui-bg-blue" id="log_id" style="margin-top: 10px;">0</span>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">用户：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled="disabled" type="text" id="member_name" name="member_name" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">日志类型：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled="disabled" type="text" id="type_name" name="type_name" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">客户端IP：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled="disabled" type="text" id="client_ip" name="client_ip" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">客户端类型：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled="disabled" type="text" id="platform_name" name="platform_name" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label" style="width: 120px">记录时间：</label>
+                                <div class="layui-input-inline">
+                                    <input disabled="disabled" type="text" id="format_time" name="format_time" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 150px;">当前操作页面URL：</label>
+                            <div class="layui-form-mid layui-word-aux" id="page_url"></div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 150px;">来源页面URL：</label>
+                            <div class="layui-form-mid layui-word-aux" id="referrer_url"></div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 150px;">客户端信息：</label>
+                            <div class="layui-form-mid layui-word-aux" id="user_agent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">日志内容：</div>
+                <div class="layui-card-body" style="line-height: 25px;word-wrap: break-word;" id="log_content">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">Cookies：</div>
+                <div class="layui-card-body" style="line-height: 25px;word-wrap: break-word;" id="user_cookies">
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/logs/details?id='+ @ViewContext.HttpContext.Request.Query["id"]
+                , data: null
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#log_id").html(res.data.log_id);
+                    $("#type_name").val(res.data.type_name);
+                    $("#member_name").val(res.data.member_name);
+                    $("#platform_name").val(res.data.platform_name);
+                    $("#format_time").val(res.data.format_time);
+                    $("#client_ip").val(res.data.client_ip);
+
+                    $("#log_content").html(res.data.log_content);
+                    $("#page_url").html(res.data.page_url);
+                    $("#referrer_url").html(res.data.referrer_url);
+                    $("#user_agent").html(res.data.user_agent);
+                    $("#user_cookies").html(res.data.user_cookies);
+                }
+            });
+
+        });
+    })
+</script>

@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageIcon>logo.png</PackageIcon>
+    <ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Views\Articles\**" />
+    <Compile Remove="Views\ArticleTypes\**" />
+    <Compile Remove="Views\Members\**" />
+    <Compile Remove="Views\PointMembers\**" />
+    <Compile Remove="Views\Reviews\**" />
+    <Compile Remove="Views\SettingBase\**" />
+    <Compile Remove="Views\Sms\**" />
+    <Content Remove="Views\Articles\**" />
+    <Content Remove="Views\ArticleTypes\**" />
+    <Content Remove="Views\Members\**" />
+    <Content Remove="Views\PointMembers\**" />
+    <Content Remove="Views\Reviews\**" />
+    <Content Remove="Views\SettingBase\**" />
+    <Content Remove="Views\Sms\**" />
+    <EmbeddedResource Remove="Views\Articles\**" />
+    <EmbeddedResource Remove="Views\ArticleTypes\**" />
+    <EmbeddedResource Remove="Views\Members\**" />
+    <EmbeddedResource Remove="Views\PointMembers\**" />
+    <EmbeddedResource Remove="Views\Reviews\**" />
+    <EmbeddedResource Remove="Views\SettingBase\**" />
+    <EmbeddedResource Remove="Views\Sms\**" />
+    <None Remove="Views\Articles\**" />
+    <None Remove="Views\ArticleTypes\**" />
+    <None Remove="Views\Members\**" />
+    <None Remove="Views\PointMembers\**" />
+    <None Remove="Views\Reviews\**" />
+    <None Remove="Views\SettingBase\**" />
+    <None Remove="Views\Sms\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\ArticlesController.cs" />
+    <Compile Remove="Controllers\ArticleStatusController.cs" />
+    <Compile Remove="Controllers\ArticleTypesController.cs" />
+    <Compile Remove="Controllers\SmsController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EPPlus.Core" Version="1.5.4" />
+    <PackageReference Include="FluentScheduler" Version="5.5.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
+    <PackageReference Include="Senparc.Weixin.TenPay" Version="1.12.6" />
+    <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="6.0.5.128" />
+    <PackageReference Include="IdentityModel" Version="6.1.0" />
+    <PackageReference Include="Lazy.Captcha.Core" Version="2.0.3" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MR.Models\MR.Models.csproj" />
+    <ProjectReference Include="..\MR.Utility\MR.Utility.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="mesreport.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

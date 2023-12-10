@@ -1,0 +1,142 @@
+﻿@{
+    ViewData["Title"] = "菜单管理";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" onclick="add();"><i class="layui-icon layui-icon-add-1"></i>新增菜单</button>
+                    <span style="color: red">&nbsp;&nbsp;提示：此功能仅供开发人员操作使用，请谨慎操作！</span>
+                </div>
+            </div>
+            <div id="LAY-app-content-list"></div>
+            <table id="area_tree_data" lay-filter="area_tree_data"></table>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    function add() {
+
+        layer.open({
+            type: 2
+            , title: '新增菜单'
+            , content: '/menus/create'
+            , maxmin: true
+            , area: ['550px', '550px']
+            , btn: ['确定', '取消']
+            , yes: function (index, layero) {
+                // 点击确认触发 iframe 内容中的按钮提交
+                var submit = layero.find('iframe').contents().find("#layuiadmin-app-form-submit");
+                submit.click();
+            }
+        });
+    }
+
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        treetable: 'treetable-lay/treetable',
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util', 'treeTable', 'layer'], function () {
+        var layer = layui.layer, form = layui.form, admin = layui.admin, $ = layui.jquery;
+        var treeTable = layui.treeTable;
+
+        // 渲染表格
+        treeTable.render({
+            elem: '#area_tree_data',
+            toolbar: false,
+            tree: {
+                iconIndex: 0
+            },
+            cols: [
+                [
+                    {
+                        field: "menu_name",
+                        title: "菜单名称",
+                        minWidth: 350
+                    },
+                    {
+                        field: "menu_id",
+                        title: "ID",
+                        width: 150
+                    },
+                    {
+                        field: "menu_url",
+                        title: "路由",
+                        width: 150
+                    },
+                    {
+                        field: "menu_rank",
+                        title: "排序",
+                        width: 150
+                    },
+                    {
+                        title: "操作",
+                        width: 200,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            reqData: function (data, callback) {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    url: '/menus/lists'
+                    , data: { parent_id: data ? data.menu_id : "-1" }
+                    , done: function (res) {
+                        layer.close(loading);
+                        callback(res.data);
+                    }
+                });
+            },
+            style: 'margin-top:0;'
+        });
+
+        // 右侧操作事件
+        treeTable.on("tool(area_tree_data)", function (t) {
+            var menu_id = t.data.menu_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此菜单？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/menus/delete/' + menu_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("edit" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "编辑菜单",
+                    content: "/menus/edit?id=" + menu_id,
+                    maxmin: !0,
+                    area: ["550px", "550px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+        });
+    });
+</script>

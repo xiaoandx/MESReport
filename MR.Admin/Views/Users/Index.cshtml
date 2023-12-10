@@ -1,0 +1,351 @@
+﻿@{
+    ViewData["Title"] = "用户列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="user_name" name="user_name" maxlength="50" placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">昵称:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="nick_name" name="nick_name" maxlength="50" placeholder="请输入昵称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">角色:</label>
+                    <div class="layui-input-inline">
+                        <select id="role_id" name="role_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                        查询
+                    </button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="mobile_phone" name="mobile_phone" maxlength="11" placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">状态:</label>
+                    <div class="layui-input-inline">
+                        <select id="user_status" name="user_status">
+                            <option value="">请选择</option>
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">职位:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="user_job" name="user_job" maxlength="20" placeholder="请输入职位" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建日期:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择创建日期" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="add"><i class="layui-icon layui-icon-add-1"></i>新增管理员</button>
+                </div>
+                <div class="layui-inline">
+                    @* <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出管理员</button> *@
+                </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="toolbarDemo">
+            </script>
+            <script type="text/html" id="statusTpl">
+                <input type="checkbox" name="user_status" lay-skin="switch" lay-text="启用|禁用" lay-filter="check_user_status"
+                       value="{{ d.user_id }}" data-json="{{ encodeURIComponent(JSON.stringify(d)) }}" {{ d.user_status ? 'checked' : '' }}>
+            </script>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="reset"><i class="layui-icon layui-icon-password"></i>重置密码</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+            <script type="text/html" id="linkTpl">
+                <a class="layui-table-link" style="cursor: pointer" lay-event="edit">{{ d.user_name }}</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util'], function () {
+        var table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , $ = layui.$
+            , util = layui.util;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+                elem: this,
+                range: true
+            });
+        });
+
+        // 默认加载数据
+        $(function () {
+            // 用户角色
+            admin.req({
+                url: '/userroles/select'
+                , done: function (res) {
+                    $.each(res.data, function (i, item) {
+                        $("#role_id").append("<option value=\"" + res.data[i].role_id + "\">" + res.data[i].role_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/users/list",
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [
+                [
+                    {
+                        type: "numbers",
+                        title: "序号",
+                        width: 80
+                    },
+                    {
+                        field: "user_name",
+                        title: "用户名",
+                        templet: "#linkTpl"
+                    },
+                    {
+                        field: "nick_name",
+                        title: "昵称",
+                        minWidth: 200
+                    },
+                    {
+                        field: "role_name",
+                        title: "角色"
+                    },
+                    {
+                        field: "mobile_phone",
+                        title: "手机号"
+                    },
+                    {
+                        field: "user_job",
+                        title: "职位"
+                    },
+                    {
+                        field: "user_status",
+                        title: "状态",
+                        templet: "#statusTpl",
+                        width: 100
+                    },
+                    {
+                        field: "format_time",
+                        title: "创建日期",
+                        width: 180,
+                        sort: !0
+                    },
+                    {
+                        title: "操作",
+                        width: 280,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 100, 500],
+            where: {
+                user_status: -1,
+            }
+        }),
+
+        // 右侧操作事件
+        table.on("tool(LAY-app-content-list)", function (t) {
+            var user_id = t.data.user_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此用户？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/users/delete/' + user_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("edit" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "编辑用户资料-" + user_id,
+                    content: "/users/edit?id=" + user_id,
+                    maxmin: !0,
+                    area: ["550px", "550px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+            else if ("reset" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "重置用户密码-" + user_id,
+                    content: "/users/resetpassword?id=" + user_id,
+                    maxmin: !0,
+                    area: ["550px", "350px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            // 执行重载
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                    curr: 1
+                },
+            });
+        });
+
+        // 监听状态操作
+        form.on('switch(check_user_status)', function (obj) {
+            var json = JSON.parse(decodeURIComponent($(this).data('json')));
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/users/setstatus?id=' + this.value + '&status=' + obj.elem.checked
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                }
+            });
+            json = table.clearCacheKey(json);
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            add: function () {
+                layer.open({
+                    type: 2
+                    , title: '新增管理员'
+                    , content: '/users/create'
+                    , maxmin: true
+                    , area: ['550px', '550px']
+                    , btn: ['确定', '取消']
+                    , yes: function (index, layero) {
+                        // 点击确认触发 iframe 内容中的按钮提交
+                        var submit = layero.find('iframe').contents().find("#layuiadmin-app-form-submit");
+                        submit.click();
+                    }
+                });
+            },
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "user_name": $("#user_name").val(), "nick_name": $("#nick_name").val(), "mobile_phone": $("#mobile_phone").val(), "user_job": $("#user_job").val(), "role_id": $("#role_id").val(), "user_status": $("#user_status").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportusers'
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if(res.errcode){
+                            layer.open({
+                              title: '错误提示'
+                              ,type: 1
+                              ,content: '<div style="color: red; padding: 20px;">'+ res.errcode +':'+ res.errmsg +'</div>'
+                              ,btn: ["确定"]
+                            });
+                        } else if(res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+    });
+</script>

@@ -1,0 +1,116 @@
+﻿@{
+    ViewData["Title"] = "选择文章";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">标题:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="article_title" name="article_title" maxlength="200" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">查询</button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="linkTpl">
+                <a lay-href="/articles/views/?id={{d.article_id}}" class="layui-table-link">{{ d.show_article_title }}</a>
+            </script>
+            <input type="hidden" id="selected_id" value="" />
+            <input type="hidden" id="selected_name" value="" />
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/articles/list",
+            toolbar: false,
+            cols: [
+                [{
+                    type: "radio",
+                    fixed: "left"
+                },
+                {
+                    field: "article_title",
+                    title: "标题",
+                    templet: "#linkTpl",
+                    minWidth: 300
+                },
+                {
+                    field: "format_time",
+                    title: "发布日期",
+                    width: 180,
+                    sort: !0
+                }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 200, 500],
+            where:{
+                review_status_id: 2
+            }
+        }),
+
+        // 监听搜索
+        form.on('submit(LAY-app-contlist-search)', function (data) {
+            var field = data.field;
+            table.reload('LAY-app-content-list', {
+                where: field,
+                page: {
+                  curr: 1
+                },
+            });
+        });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        // 监听选择值
+        table.on("radio(LAY-app-content-list)", function (t) {
+            if (t.checked) {
+                $("#selected_id").val(t.data.article_id);
+                $("#selected_name").val(t.data.article_title);
+                // console.log(`article_id=${t.data.article_id},article_title=${t.data.article_title}`);
+            }
+        });
+
+        var $ = layui.$, active = {
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+    </script>

@@ -1,0 +1,211 @@
+﻿@{
+    ViewData["Title"] = "会员详情";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<style>
+    .layui-input, .layui-select, .layui-textarea {
+        border-width: 0px;
+    }
+</style>
+<div class="layui-fluid" id="LAY-component-grid-mobile">
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-xs12">
+                <div class="layui-card">
+             <div class="layui-card-header">用户信息</div>
+                    <div class="layui-card-body">
+                        <div style="padding: 20px 30px 0 0;">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">会员ID：</label>
+                                    <div class="layui-input-inline">
+                                        <span class="layui-badge layui-bg-blue" id="member_id" style="margin-top: 10px;">0</span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">昵称：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="member_name" name="member_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">姓名：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="real_name" name="real_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">手机号：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="mobile_phone" name="mobile_phone" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">用户类型：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="type_name" name="type_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">性别：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="gender_name" name="gender_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">状态：</label>
+                                    <div class="layui-input-inline">
+                                        <span id="member_status"></span>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" style="width: 120px">注册来源：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="source_name" name="source_name" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label id="id_no_name" class="layui-form-label" style="width: 120px">注册时间：</label>
+                                    <div class="layui-input-inline">
+                                        <input disabled="disabled" type="text" id="format_time" name="format_time" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-xs12">
+                <div class="layui-card">
+                    <div class="layui-card-header">登录日志</div>
+                    <div class="layui-card-body">
+                    <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+                    <script type="text/html" id="linkTpl">
+                        <a lay-href="/logs/views/?id={{d.log_id}}" class="layui-table-link">{{ d.log_content }}</a>
+                    </script>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'form', 'table', 'util'], function () {
+        var $ = layui.$
+            , admin = layui.admin
+            , table = layui.table
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/members/details'
+                , data: { id: @ViewContext.HttpContext.Request.Query["id"] }
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    $("#member_id").html(res.data.member_id);
+                    $("#member_avatar").html("<img style=\"border-radius: 100%;height: 100px; width: 100px;\" src=\"" + res.data.show_member_avatar + "\" width=\"100\" height=\"100\">");
+                    $("#open_id").html(res.data.open_id);
+                    $("#member_account").val(res.data.member_account);
+                    $("#mobile_phone").val(res.data.mobile_phone);
+                    $("#member_name").val(res.data.member_name);
+                    $("#real_name").val(res.data.real_name);
+                    $("#gender_name").val(res.data.gender_name);
+                    $("#type_name").val(res.data.type_name);
+                    $("#member_country").val(res.data.member_country);
+                    $("#member_province").val(res.data.member_province);
+                    $("#member_city").val(res.data.member_city);
+                    $("#business_name").val(res.data.business_name);
+                    $("#business_phone").val(res.data.business_phone);
+                    $("#business_phone_area").val(res.data.business_phone_area);
+                    $("#member_status").html(res.data.member_status ? "<span style=\"margin-top: 10px\" class=\"layui-badge layui-bg-green\">正常</span>" : "<span style=\"margin-top: 10px\" class=\"layui-badge layui-bg-red\">冻结</span>");
+                    $("#source_name").val(res.data.source_name);
+                    $("#member_birth").val(res.data.member_birth);
+                    $("#invite_id").val(res.data.invite_id);
+                    $("#member_qrcode").val(res.data.member_qrcode);
+                    $("#medium_id").val(res.data.medium_id);
+                    $("#member_remark").val(res.data.member_remark);
+                    $("#format_time").val(res.data.format_time);
+                    $("#member_job").val(res.data.member_job);
+                    $("#company_name").val(res.data.company_name);
+                    $("#member_email").val(res.data.member_email);
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/logs/memberlist",
+            toolbar: false,
+            cols: [
+                [
+                    {
+                        type: "numbers",
+                        title: "序号",
+                        width: 80
+                    },
+                    {
+                        field: "type_name",
+                        title: "日志类型",
+                        width: 120
+                    },
+                    {
+                        field: "member_name",
+                        title: "昵称",
+                        width: 200
+                    },
+                    {
+                        field: "log_content",
+                        title: "日志内容",
+                        width: 250,
+                        templet: "#linkTpl"
+                    },
+                    {
+                        field: "client_ip",
+                        title: "客户端IP",
+                        width: 150
+                    },
+                    {
+                        field: "page_url",
+                        title: "页面路由",
+                        minWidth: 200
+                    },
+                    {
+                        field: "format_time",
+                        title: "登录时间",
+                        sort: !0,
+                        width: 180
+                    }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 100, 500],
+            where: {
+                user_id: @ViewContext.HttpContext.Request.Query["id"],
+            }
+        })
+    })
+</script>

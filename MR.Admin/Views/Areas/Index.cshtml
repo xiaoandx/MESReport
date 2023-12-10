@@ -1,0 +1,179 @@
+﻿@{
+    ViewData["Title"] = "区域设置";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="add"><i class="layui-icon layui-icon-add-1"></i>新增一级区域</button>
+                    <span style="color: red">&nbsp;&nbsp;提示：此功能仅供开发人员操作使用，请谨慎操作！</span>
+                </div>
+            </div>
+            <table id="area_tree_data" lay-filter="area_tree_data"></table>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="add"><i class="layui-icon layui-icon-add-1"></i>新增</a>
+                <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'treeTable'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , form = layui.form
+            , admin = layui.admin;
+
+        var treeTable = layui.treeTable;
+
+        treeTable.render({
+            elem: '#area_tree_data',
+            toolbar: false,
+            tree: {
+                iconIndex: 1
+            },
+            cols: [
+                [
+                    {
+                        field: "area_id",
+                        title: "ID",
+                        width: 100,
+                    },
+                    {
+                        field: "area_name",
+                        title: "区域名称",
+                        minWidth: 200,
+                    },
+                    {
+                        field: "short_name",
+                        title: "简称",
+                        width: 100,
+                    },
+                    {
+                        field: "area_pinyin",
+                        title: "拼音",
+                        width: 120,
+                    },
+                    {
+                        field: "area_lng",
+                        title: "经度",
+                        width: 120,
+                    },
+                    {
+                        field: "area_lat",
+                        title: "纬度",
+                        width: 120,
+                    },
+                    {
+                        title: "操作",
+                        width: 280,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            reqData: function (data, callback) {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    url: '/areas/list'
+                    , data: { parent_id: data ? data.area_id : "1" }
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        callback(res.data);
+                    }
+                });
+            },
+            style: 'margin-top:0;'
+        });
+
+        // 右侧操作事件
+        treeTable.on("tool(area_tree_data)", function (t) {
+            var area_id = t.data.area_id;
+            if ("del" === t.event) {
+                layer.confirm("确定删除此区域？", function (e) {
+                    admin.req({
+                        headers: {
+                            'RequestVerificationToken': csrfToken
+                        },
+                        method: 'POST',
+                        url: '/areas/delete/' + area_id
+                        , done: function (res) {
+                            t.del();
+                            layer.close(e);
+                        }
+                    });
+
+                });
+            }
+            else if ("add" === t.event) {
+                var level_type = t.data.level_type;
+                level_type = parseInt(level_type) + 1;
+                layer.open({
+                    type: 2,
+                    title: "新增区域",
+                    content: "/areas/create?level_type=" + level_type + "&parent_id=" + area_id,
+                    maxmin: !0,
+                    area: ["550px", "550px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-submit");
+                        a.trigger("click");
+                    }
+                })
+            }
+            else if ("edit" === t.event) {
+                layer.open({
+                    type: 2,
+                    title: "编辑区域",
+                    content: "/areas/edit?parent_id=" + area_id,
+                    maxmin: !0,
+                    area: ["550px", "550px"],
+                    btn: ["确定", "取消"],
+                    yes: function (e, i) {
+                        a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                        a.trigger("click");
+                    }
+                })
+            }
+        });
+
+        var $ = layui.$, active = {
+            add: function () {
+                layer.open({
+                    type: 2
+                    , title: '添加一级区域'
+                    , content: '/areas/create?level_type=1&parent_id=100000'
+                    , maxmin: true
+                    , area: ['550px', '550px']
+                    , btn: ['确定', '取消']
+                    , yes: function (index, layero) {
+                        //点击确认触发 iframe 内容中的按钮提交
+                        var submit = layero.find('iframe').contents().find("#layuiadmin-app-form-submit");
+                        submit.click();
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>

@@ -1,0 +1,358 @@
+﻿@{
+    ViewData["Title"] = "会员列表";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="mobile_phone" name="mobile_phone" maxlength="11" placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">昵称:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="member_name" name="member_name" maxlength="50" placeholder="请输入昵称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">注册来源:</label>
+                    <div class="layui-input-inline">
+                        <select id="source_id" name="source_id">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-submit lay-filter="LAY-app-contlist-search">
+                        查询
+                    </button>
+                    <button class="layui-btn layui-btn-primary" lay-submit lay-filter="LAY-app-contlist-reset">重置</button>
+                    <label style="margin-left: 10px; color: #6eae21; cursor: pointer;" id="collapse">展开<i style="right: -20px;" class="layui-icon layui-icon-down"></i></label>
+                </div>
+            </div>
+            <div class="layui-form-item collapse_item" style="display:none;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">会员类型:</label>
+                    <div class="layui-input-inline">
+                        <select id="type_id" name="type_id">
+                            <option value="">选择会员类型</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">邀请码:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="invite_code" name="invite_code" maxlength="10" placeholder="请输入邀请码" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">注册日期:</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input time" id="created_at" name="created_at" placeholder="选择注册日期" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-form-item" style="margin-bottom: 5px;">
+                <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layuiadmin-btn-list" data-type="export"><i class="layui-icon layui-icon-export"></i>导出会员</button>
+                </div>
+            </div>
+            <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-xs" lay-event="views"><i class="layui-icon layui-icon-search"></i>详情</a>
+            </script>
+            <script type="text/html" id="linkTpl">
+                <a lay-href="/members/views/?id={{d.member_id}}" class="layui-table-link">{{ d.member_name?d.member_name:'未填写' }}</a>
+            </script>
+            <script type="text/html" id="avatarTpl">
+                <a style="cursor: pointer" onclick="preview(this);"><img src="{{ d.show_member_avatar }}" style="border-radius: 50%; width: 25px; height: 25px; cursor: pointer" /></a>
+            </script>
+            <script type="text/html" id="statusTpl">
+                {{#  if(d.member_status){ }}
+                <span class="layui-badge layui-bg-green">正常</span>
+                {{# } else { }}
+                <span class="layui-badge layui-bg-red">冻结</span>
+                {{# } }}
+            </script>
+        </div>
+    </div>
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'table', 'laydate', 'util'], function () {
+        var $ = layui.$
+            , table = layui.table
+            , admin = layui.admin
+            , form = layui.form
+            , laydate = layui.laydate
+            , util = layui.util;
+
+        var num = 2;
+
+        lay('.time').each(function () {
+            laydate.render({
+                elem: this,
+                range: true
+            });
+        });
+
+        // 默认加载
+        $(function () {
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 推广来源
+            admin.req({
+                url: '/utmsources/select'
+                , done: function (res_sourceid) {
+                    layer.close(loading);
+                    $.each(res_sourceid.data, function (i, item) {
+                        $("#source_id").append("<option value=\"" + res_sourceid.data[i].source_id + "\">" + res_sourceid.data[i].source_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+
+            // 会员角色
+            admin.req({
+                url: '/membertypes/select'
+                , done: function (res_typeid) {
+                    layer.close(loading);
+                    $.each(res_typeid.data, function (i, item) {
+                        $("#type_id").append("<option value=\"" + res_typeid.data[i].type_id + "\">" + res_typeid.data[i].type_name + "</option>");
+                    });
+                    layui.form.render('select');
+                }
+            });
+        });
+
+        // 加载表格数据
+        table.render({
+            elem: "#LAY-app-content-list",
+            url: "/members/list",
+            toolbar: false,
+            cols: [
+                [
+                    {
+                        type: "numbers",
+                        title: "序号",
+                        width: 80,
+                    },
+                    {
+                        field: "member_avatar",
+                        title: "头像",
+                        width: 60,
+                        templet: "#avatarTpl"
+                    },
+                    {
+                        field: "mobile_phone",
+                        title: "手机号",
+                        width: 150
+                    },
+                    {
+                        field: "member_name",
+                        title: "昵称",
+                        minWidth: 200
+                    },
+                    {
+                        field: "source_name",
+                        title: "注册来源",
+                        width: 120
+                    },
+                    {
+                        field: "type_name",
+                        title: "会员类型",
+                        width: 120
+                    },
+                    {
+                        field: "invite_code",
+                        title: "邀请码",
+                        width: 120,
+                    },
+                    {
+                        field: "member_status",
+                        title: "状态",
+                        width: 120,
+                        templet: "#statusTpl"
+                    },
+                    {
+                        field: "format_time",
+                        title: "注册日期",
+                        sort: !0,
+                        width: 180
+                    },
+                    {
+                        title: "操作",
+                        width: 120,
+                        align: "center",
+                        fixed: "right",
+                        toolbar: "#table-content-list"
+                    }]
+            ],
+            page: !0,
+            limit: 10,
+            limits: [10, 20, 50, 100, 500],
+            where: {
+                member_type: -1,
+            }
+        }),
+
+            // 右侧操作事件
+            table.on("tool(LAY-app-content-list)", function (t) {
+                var member_id = t.data.member_id;
+                if ("del" === t.event) {
+                    layer.confirm("确定删除此会员？", function (e) {
+                        admin.req({
+                            headers: {
+                                'RequestVerificationToken': csrfToken
+                            },
+                            method: 'POST',
+                            url: '/members/delete/' + member_id
+                            , done: function (res) {
+                                t.del();
+                                layer.close(e);
+                            }
+                        });
+
+                    });
+                }
+                else if ("edit" === t.event) {
+                    layer.open({
+                        type: 2,
+                        title: "编辑会员" + member_id,
+                        content: "/members/edit?id=" + member_id,
+                        maxmin: !0,
+                        area: ["550px", "550px"],
+                        btn: ["确定", "取消"],
+                        yes: function (e, i) {
+                            a = i.find("iframe").contents().find("#layuiadmin-app-form-edit");
+                            a.trigger("click");
+                        }
+                    })
+                }
+                else if ("views" === t.event) {
+                    parent.layui.index.openTabsPage('/members/views/?id=' + member_id, '会员详情-' + member_id);
+                }
+            }),
+
+            // 监听搜索
+            form.on('submit(LAY-app-contlist-search)', function (data) {
+                var field = data.field;
+                data.field.page = 1;
+                table.reload('LAY-app-content-list', {
+                    where: field,
+                    page: {
+                        curr: 1
+                    }
+                });
+            });
+
+        // 监听重置
+        form.on('submit(LAY-app-contlist-reset)', function (data) {
+            $(".layui-form input").val("");
+            $(".layui-card-header select").val("");
+        });
+
+        var $ = layui.$, active = {
+            add: function () {
+                layer.open({
+                    type: 2
+                    , title: '添加会员'
+                    , content: '/members/create'
+                    , maxmin: true
+                    , area: ['550px', '550px']
+                    , btn: ['确定', '取消']
+                    , yes: function (index, layero) {
+                        //点击确认触发 iframe 内容中的按钮提交
+                        var submit = layero.find('iframe').contents().find("#layuiadmin-app-form-submit");
+                        submit.click();
+                    }
+                });
+            },
+            export: function () {
+                loading = layer.load(2, {
+                    shade: [0.2, '#000']
+                });
+
+                admin.req({
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    },
+                    method: 'POST',
+                    data: { "mobile_phone": $("#mobile_phone").val(), "member_name": $("#member_name").val(), "invite_code": $("#invite_code").val(), "source_id": $("#source_id").val(), "type_id": $("#type_id").val(), "select_date": $("#created_at").val() },
+                    url: '/excel/exportmembers'
+                    , done: function (res) {
+                        // console.log(`res=${JSON.stringify(res)}`);
+                        layer.close(loading);
+                        if (res.errcode) {
+                            layer.open({
+                                title: '错误提示'
+                                , type: 1
+                                , content: '<div style="color: red; padding: 20px;">' + res.errcode + ':' + res.errmsg + '</div>'
+                                , btn: ["确定"]
+                            });
+                        } else if (res.code == 0 && res.count == 0) {
+                            layer.msg(res.msg, {
+                                offset: '15px'
+                                , icon: 1
+                                , time: 2000
+                            });
+                        } else {
+                            location.href = res.path;
+                        }
+                    }
+                });
+            },
+            refresh: function () {
+                table.reload('LAY-app-content-list');
+            }
+        };
+
+        $('.layui-btn.layuiadmin-btn-list').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+
+        $('#collapse').on('click', function () {
+            if (num % 2) {
+                $(".collapse_item").hide();
+                $("#collapse").html("展开<i style=\"right: -20px;\" class=\"layui-icon layui-icon-down\"></i>");
+            }
+            else {
+                $(".collapse_item").show();
+                $("#collapse").html("收起<i style=\"right: -20px;\" class=\"layui-icon layui-icon-up\"></i>");
+            }
+            num++;
+        });
+    });
+
+    // 预览图片
+    function preview(t) {
+        var t = $(t).find("img");
+        layer.open({
+            type: 1,
+            title: '头像预览',
+            skin: 'layui-layer-rim',
+            area: ['80%', '80%'],
+            shadeClose: true,
+            end: function (index, layero) {
+                return false;
+            },
+            content: '<div style="text-align:center;padding: 20px;"><img src="' + $(t).attr('src') + '" /></div>'
+        });
+    }
+</script>

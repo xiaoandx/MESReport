@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "编辑意见反馈";
+    Layout = "~/Views/Shared/_LayoutNone.cshtml";
+}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 姓名</label>
+        <div class="layui-input-block">
+            <input type="text" id="feedback_name" name="feedback_name" maxlength="50" lay-verify="required" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    
+    <div class="layui-form-item">
+        <label class="layui-form-label">Email</label>
+        <div class="layui-input-block">
+            <input type="text" id="feedback_email" name="feedback_email" maxlength="50" placeholder="请输入Email" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 联系电话</label>
+        <div class="layui-input-block">
+            <input type="text" id="feedback_phone" name="feedback_phone" maxlength="50" lay-verify="required" placeholder="请输入联系电话" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span style="color:red">*</span> 反馈内容</label>
+        <div class="layui-input-block">
+            <textarea id="feedback_content" name="feedback_content" maxlength="2000" lay-verify="required" placeholder="请输入反馈内容" autocomplete="off" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-hide">
+        <input type="hidden" id="created_at" name="created_at" value="@DateTime.Now.ToString()" />
+        <input type="hidden" id="client_ip" name="client_ip" value="127.0.0.1" />
+        <input type="hidden" id="feedback_id" name="feedback_id" value="@ViewContext.HttpContext.Request.Query["id"]" />
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-submit" id="layuiadmin-app-form-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+
+</div>
+
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/layuiadmin/'
+    }).extend({
+        index: '/lib/index'
+    }).use(['index', 'laydate', 'form'], function () {
+        var $ = layui.$
+            , form = layui.form
+            , admin = layui.admin
+            , laydate = layui.laydate;
+
+        // 默认加载
+        $(function () {
+            var feedback_id = $("#feedback_id").val();
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            admin.req({
+                url: '/feedback/details'
+                , data: { id: feedback_id }
+                , done: function (res) {
+                    layer.close(loading);
+                    $("#feedback_name").val(res.data.feedback_name);
+                    $("#feedback_email").val(res.data.feedback_email);
+                    $("#feedback_phone").val(res.data.feedback_phone);
+                    $("#feedback_content").val(res.data.feedback_content);
+                    $("#client_ip").val(res.data.client_ip);
+                }
+            });
+        });
+
+        // 监听提交
+        form.on('submit(layuiadmin-app-form-edit)', function (data) {
+            var field = data.field; //获取提交的字段
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            loading = layer.load(2, {
+                shade: [0.2, '#000']
+            });
+
+            // 提交数据
+            admin.req({
+                headers: {
+                    'RequestVerificationToken': csrfToken
+                },
+                method: 'POST',
+                url: '/feedback/edit?id=' + data.field.feedback_id
+                , data: data.field
+                , done: function (res) {
+                    // console.log(`res=${JSON.stringify(res)}`);
+                    layer.close(loading);
+                    parent.layui.table.reload('LAY-app-content-list'); //重载表格
+                    layer.msg(res.msg, {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 2000
+                    }, function () {
+                        parent.layer.close(index); //再执行关闭
+                    });
+                }
+            });
+        });
+    })
+</script>
